@@ -207,3 +207,10 @@ discovery bytes; the historical SHA values above identify the preserved
 originals, not the current copies. Current normal-wheel verification and
 unchanged-original probe results are recorded in [RELEASE_VERIFICATION](RELEASE_VERIFICATION.md).
 Remote default-global Windows CI remains a parent-run gate.
+
+After tooling correction: `78e1050113974eb5afa064acb1aba3eff2de6cc9`.
+The [committed ordinary-wheel receipt](evidence/tooling-installed-wheel.json)
+binds all nine installed module hashes to this correction SHA. The subsequent
+verification freeze adds this receipt/provenance only; library and runner
+source remain unchanged. A receipt generated at the final frozen HEAD is
+available from `python benchmarks/verify_install.py` without any source edits.

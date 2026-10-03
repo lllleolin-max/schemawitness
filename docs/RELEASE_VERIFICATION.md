@@ -81,6 +81,12 @@ metadata changed after e633cbc. The current owned console discovery uses the
 interpreter's sysconfig scripts installation directory; all actual-console
 assertions remain intact.
 
+[Current normal-wheel receipt](evidence/tooling-installed-wheel.json) records
+correction commit `78e1050113974eb5afa064acb1aba3eff2de6cc9`, site-packages
+import, editable=false, package 0.1.1 and equality of all nine module hashes.
+The following documentation/receipt freeze preserves the same tested library
+and harness source; run verify_install.py at frozen HEAD to bind that identity.
+
 - [Full wheel suite](evidence/tooling-wheel-tests.txt): all 24 methods pass,
   no skips, in 6.867 s, including the 625-pair finite independent-validator oracle.
 - [Owned encoded-pointer probe](evidence/tooling-owned-encoded.json) and
