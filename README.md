@@ -14,6 +14,13 @@ or certify provider behavior. See [supported subset](docs/SUBSET.md).
 
 ## Quickstart / 快速开始
 
+With Git installed, start from a new checkout / 首次使用先克隆并进入目录：
+
+```console
+git clone https://github.com/lllleolin-max/schemawitness.git
+cd schemawitness
+```
+
 Python 3.11+; run from a clone in the intended Python environment. `pip` installs the `jsonschema` runtime dependency and builds a normal wheel. For an isolated install, run `python -m venv .venv`, then `.venv\Scripts\Activate.ps1` in PowerShell or `source .venv/bin/activate` in Bash. Examples contain disclosed synthetic API contracts.
 
 ```sh
