@@ -10,6 +10,15 @@ code points; `properties`, `required`, schema/boolean `additionalProperties`;
 homogeneous `items`, `minItems`/`maxItems`; `allOf`; nonrecursive same-document
 JSON Pointer `$ref`, including `$defs`. `$ref` siblings are intersected.
 
+URI-fragment separators may be percent encoded. Decoding occurs exactly once
+semantically before JSON Pointer tilde handling: `%252F` names a literal `%2F`
+key, whereas `~1` names a slash inside one key. UTF-8 names and `~0` tilde names
+are supported. The independent dependency receives a canonical lookup URI
+through a resolver adapter; the original schema and literal data are unchanged.
+Encountered references are independently resolved before a proof is returned,
+so a backend lookup failure cannot produce an inclusion certificate. Actual
+search/console paths for both encodings are regression-tested.
+
 Annotations ignored for validation: title, description, default, examples,
 deprecated, readOnly, writeOnly, `$comment`. This does not implement OpenAPI
 readOnly/writeOnly field projection; callers must supply the effective
@@ -37,8 +46,16 @@ schemas, with its integer type predicate extended to exact Decimal integers.
 Integral Decimal instances are represented by equivalent mathematical ints
 inside that validator to preserve integer semantics when it switches dialect
 classes while resolving references. No schema assertions/data are transformed.
-No floating-point epsilon
-is used to prove inclusion. Search boundary offsets are finite decimal rationals.
+No floating-point epsilon is used to prove inclusion. Search boundary offsets
+are finite decimal rationals.
+
+`independent_validate` is a membership helper for validated supported schemas
+and transported JSON values. Its `valid` is true/false only after successful
+evaluation; a dependency failure returns `valid:null` with
+`independent_validator_failure`. Callers must use explicit true/false tests.
+compare emits UNKNOWN and no witness/proof if independent lookup/evaluation
+fails. Unsupported/invalid schemas still follow the explicit compiler statuses;
+valid encoded pointers are supported and do not use this failure fallback.
 
 Defaults: 1 MB documents/witness wires, 2,000 expanded schema nodes, expansion depth 32,
 2,000 generated candidates, 128 units per candidate container/string; 32 child

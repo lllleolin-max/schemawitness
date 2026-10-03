@@ -111,3 +111,50 @@ actual serialization and check the cumulative budget.
 [After output](evidence/round5-after.txt) records the full pass. The correction
 commit is `d03e2213f9ca42df4c9fdeb4e83fd89bee995394`. This further correction is substantive code,
 not one of the three required cycles or a documentation-only change.
+
+## Round 6 — encoded pointer integration through independent evaluation
+
+Before: `420cb44df6c1c2b6a669bffe35f44eb49939d570` (package 0.1.0).
+Independent review rejected this artifact because the compiler accepted encoded
+leading URI separators while jsonschema/referencing classified `%2F...` as an
+anchor. Actual supported witness search raised `_WrappedReferencingError`;
+the real console exited 1 with empty stdout and a traceback. No false
+certificate was claimed for this defect; no Result was produced.
+
+Archived reproduction: `git archive` of the exact before SHA was built into
+a normal wheel and installed; [receipt](evidence/round6-old-archive-install.json)
+confirms all eight installed modules exactly match the archive. The unchanged
+reviewer SDK/actual-console probe is copied as
+`benchmarks/encoded_pointer_probe.py`, SHA256
+`010cce8342bff9c99a159486dc917c515ca60aa2724eaffeab75e1c59ddb9d0a`.
+[Actual before result](evidence/round6-peer-before.json) has successful=false;
+canonical URI works, encoded URI raises and console JSON is absent.
+
+Correction: a dependency resolver adapter decodes then re-encodes the URI
+fragment with literal pointer separators before delegating target lookup to
+referencing. It changes the lookup argument only, never schema trees or literal
+data. Lookup still uses the original document; jsonschema still evaluates
+all assertions/siblings. Integral Decimal equivalence and resolver propagation
+survive validator-class changes, including targets located inside annotations
+or literal schema data. Compiler metadata records encountered URI spellings
+only, and independent lookup checks them before any inclusion certificate.
+Unresolvable backend evaluations produce UNKNOWN (`valid=None` in the helper),
+never rejection evidence or a compatibility certificate.
+
+Mathematical transport argument: for fragment f, adapter C(f) =
+quote(unquote(f), safe='/~'). The dependency's pointer decode gives
+unquote(C(f)) = unquote(f); a literal percent is encoded again, so `%252F`
+continues to name `%2F`, not `/`. JSON Pointer `~0`/`~1` handling remains in
+the independent dependency after URI decoding. Tests include literal `%`,
+`%2F`, Unicode, tilde/slash names, both schema directions, siblings, nested
+dialect switching, annotation targets, dual literal/schema targets and cycles.
+
+Version bumped to 0.1.1 before public release. Separate review tooling issue:
+verify_install.py now supports extracted archives without claiming a Git SHA
+or borrowing a parent checkout's identity. In a checkout it requires committed
+source before reporting HEAD. This tooling correction is separate from the
+supported-reference semantic correction.
+
+After correction commit and normal-wheel results are recorded at the following
+documentation freeze. The root-owned old FAIL report/probe remain unchanged.
+No new independent scores or publication are claimed by the builder.

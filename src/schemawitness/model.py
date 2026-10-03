@@ -182,6 +182,7 @@ class Compiler:
 
     def __init__(self, root, limits):
         self.root, self.limits, self.nodes = root, limits, 0
+        self.references = set()
 
     def compile(self, schema=None, path="", stack=(), depth=0):
         if schema is None:
@@ -274,6 +275,7 @@ class Compiler:
                 raise SchemaIssue("invalid_reference", path + "/$ref", "reference target does not exist: " + ref) from exc
             if id(target) in stack:
                 raise SchemaIssue("recursive_reference", path + "/$ref", "recursive references are not supported")
+            self.references.add(ref)
             s = meet(s, self.compile(target, pointer, stack + (id(target),), depth + 1))
         if "allOf" in schema:
             values = schema["allOf"]

@@ -25,6 +25,7 @@ schemawitness review examples/release.json
 python examples/workflow.py
 python benchmarks/compare.py
 python benchmarks/adverse.py
+python benchmarks/encoded_pointer_probe.py
 python -m unittest discover -s tests -v
 ```
 

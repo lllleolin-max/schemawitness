@@ -6,6 +6,8 @@
    product shape: disjoint type atoms (integer and noninteger numeric branches),
    finite enumeration, intervals, string/array lengths, per-property constraints,
    required keys, additional-property and item constraints.
+   It records encountered URI spellings; an independent referencing lookup of
+   those original-document targets runs before any inclusion certificate.
 3. A sufficient recursive inclusion calculus can emit COMPATIBLE. If it cannot,
    a separate boundary-guided search generates source-valid candidate values.
 4. Every proposed witness is serialized exactly and reparsed. An independent
@@ -13,6 +15,17 @@
    transport. Only source-valid/target-invalid evidence emits BREAKING.
 5. Release review checks both directions for every manifest operation and
    allows release only if every directional result is proven COMPATIBLE.
+
+The independent resolver adapter changes only a local reference URI passed to
+lookup: decode its fragment, then re-encode it with literal pointer separators.
+The dependency resolves the original target and jsonschema applies its original
+assertions. This preserves literal percent/Unicode names and every const/enum
+value, including a node used simultaneously as literal data and a reference
+target. The adapter travels with the resolver during validator evolution;
+integral-instance representation preserves integer semantics across classes.
+It uses jsonschema's private `_resolver` constructor seam plus referencing's
+documented resolver methods. Dependency changes can affect that seam; actual
+installed-version tests and structured UNKNOWN failure handling cover it.
 
 ## Why the proof rules are sound
 

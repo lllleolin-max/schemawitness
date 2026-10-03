@@ -20,4 +20,5 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - run: python benchmarks/compare.py
       - run: python benchmarks/adverse.py
+      - run: python benchmarks/encoded_pointer_probe.py
       - run: python examples/workflow.py

@@ -1,39 +1,12 @@
 """Public directional comparison and independent post-transport evidence."""
 from dataclasses import dataclass, field, asdict
 from decimal import Decimal
-from fractions import Fraction
-from jsonschema import Draft202012Validator, validators
+from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
-from referencing import Registry
-from referencing.exceptions import NoSuchResource
 from .model import Compiler, Limits, SchemaIssue, prove_subset
 from .search import Search
 from .wire import dumps, loads, WireError, WireLimitError
-
-
-def _integer(checker, value):
-    return not isinstance(value, bool) and isinstance(value, (int, Decimal)) and Fraction(value).denominator == 1
-
-
-ExactValidator = validators.extend(Draft202012Validator, type_checker=
-    Draft202012Validator.TYPE_CHECKER.redefine("integer", _integer))
-
-
-def _no_network(uri):
-    raise NoSuchResource(ref=uri)
-
-
-def _validator_instance(value):
-    # Same mathematical JSON value, with integral Decimals represented as ints.
-    # This survives jsonschema's dialect-specific validator switching for refs
-    # into arbitrary schema-shaped locations, without changing ANY schema data.
-    if isinstance(value, Decimal) and Fraction(value).denominator == 1:
-        return int(value)
-    if isinstance(value, dict):
-        return {k: _validator_instance(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_validator_instance(v) for v in value]
-    return value
+from .validation import independent_validate, check_reference_lookup
 
 
 def _meta_schema(value):
@@ -44,13 +17,6 @@ def _meta_schema(value):
     if isinstance(value, list):
         return [_meta_schema(v) for v in value]
     return value
-
-
-def independent_validate(schema, value):
-    validator = ExactValidator(schema, registry=Registry(retrieve=_no_network))
-    errors = sorted(validator.iter_errors(_validator_instance(value)), key=lambda e: (str(list(e.path)), str(list(e.schema_path))))
-    return {"valid": not errors, "errors": [{"instance_path": list(e.path),
-            "schema_path": list(e.schema_path), "keyword": e.validator} for e in errors[:8]]}
 
 
 @dataclass
@@ -126,6 +92,11 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
                 raise
         os, ns = compiled
         result.metrics["normalized_nodes"] = oc.nodes + nc.nodes
+        for label, schema, compiler in (("old", old, oc), ("new", new, nc)):
+            failure = check_reference_lookup(schema, compiler.references)
+            if failure:
+                result.diagnostics.append({**failure, "schema": label, "path": ""})
+                return result
     except SchemaIssue as exc:
         result.status = "INVALID" if exc.code.startswith("invalid_") else "UNKNOWN"
         result.diagnostics.append(exc.diagnostic())
@@ -157,9 +128,13 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
                 if len(result.diagnostics) < 8:
                     result.diagnostics.append({"code": "validation_limit", "path": "", "message": str(exc)})
                 continue
-            if sv["valid"] and not tv["valid"]:
+            if sv["valid"] is None or tv["valid"] is None:
+                result.diagnostics.append({"code": "independent_validator_failure", "path": "",
+                                           "message": "membership unresolved; no witness can be certified"})
+                break
+            if sv["valid"] is True and tv["valid"] is False:
                 result.status, result.witness, result.wire = "BREAKING", transported, wire
-                result.validation = {"source": sv, "target": tv, "validator": "jsonschema.Draft202012Validator; exact Decimal integer semantics and equivalent integral representation", "after_wire_roundtrip": True}
+                result.validation = {"source": sv, "target": tv, "validator": "jsonschema.Draft202012Validator; exact Decimal integer semantics, equivalent integral representation, RFC6901 local-fragment resolver adapter", "after_wire_roundtrip": True}
                 break
         result.metrics.update({"generated_candidates": min(engine.generated, limits.max_candidates),
                                "candidate_bytes": engine.candidate_bytes, "search_truncated": engine.truncated,

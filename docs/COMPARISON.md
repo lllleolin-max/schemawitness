@@ -19,6 +19,11 @@ Primary-source verification date: 2026-10-03.
   consumers' real expectations.
 - [python-jsonschema validation API](https://python-jsonschema.readthedocs.io/en/stable/validate/)
   supplies the independent 2020-12 validator and type-checker extension API.
+- [RFC 6901 URI-fragment form](https://www.rfc-editor.org/rfc/rfc6901#section-6)
+  and [referencing resolver API](https://referencing.readthedocs.io/en/stable/api/)
+  ground the encoded-pointer adapter. In the observed 4.26.0/0.37.0 dependency
+  pair, encoded leading separators need canonicalization at lookup; this is an
+  integration workaround, not a claim of a new reference algorithm.
 
 The engineering combination is a sound sufficient inclusion result, a separate
 bounded witness result, exact post-wire independent validation, and a fail-closed
