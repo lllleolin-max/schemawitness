@@ -1,4 +1,6 @@
 .venv/
+.wheel-venv/
+docs/evidence/local/
 __pycache__/
 *.pyc
 *.egg-info/

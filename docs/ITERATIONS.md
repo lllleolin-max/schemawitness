@@ -88,4 +88,26 @@ validator-class switching without any schema rewriting. Input preflight also
 runs before SDK serialization to catch oversized numeric literals precisely.
 [After output](evidence/round4-after.txt): full suite passes, including the
 arbitrary-location reference and search-only regression.
-After correction commit is recorded following creation.
+After: `7e08d1d72856ee360559953c87fe97569d6280bf`.
+
+The evidence text preserves observed failures/results while redacting local
+machine prefixes as `<repo>/`; raw logs remain ignored locally. The release
+verification expands the finite oracle to 625 schema pairs, including exact
+decimals, type unions, intersections and reference siblings.
+
+## Additional resource review — budget preprocessing before deduplication
+
+Before-code: `7e08d1d72856ee360559953c87fe97569d6280bf`; probe run after additional
+diagnostic/CLI tests were prepared but before this correction. Instrumenting
+the structural de-duplication key showed oversized shared candidates reached
+key expansion before bounded serialization. The wire guard raised an ERROR
+on the five-level array: [actual before output](evidence/round5-before.txt).
+
+Correction: capped exact wire-size estimation with memoized shared containers
+before keys, an 8 MB cumulative candidate encoding budget and explicit search
+limit reasons. The original wire estimator regression remains; no oversized
+candidate now reaches the key guard. New tests compare estimated bytes against
+actual serialization and check the cumulative budget.
+[After output](evidence/round5-after.txt) records the full pass. The correction
+commit is recorded after creation. This further correction is substantive code,
+not one of the three required cycles or a documentation-only change.

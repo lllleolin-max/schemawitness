@@ -24,6 +24,7 @@ schemawitness review examples/release.json
 # exit 1, BLOCK: 2 BREAKING + 2 COMPATIBLE directional checks
 python examples/workflow.py
 python benchmarks/compare.py
+python benchmarks/adverse.py
 python -m unittest discover -s tests -v
 ```
 

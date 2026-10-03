@@ -42,13 +42,16 @@ is used to prove inclusion. Search boundary offsets are finite decimal rationals
 
 Defaults: 1 MB documents/witness wires, 2,000 expanded schema nodes, expansion depth 32,
 2,000 generated candidates, 128 units per candidate container/string; 32 child
-variants. `Limits` exposes these budgets to the SDK. Search truncation and
+variants, 8 MB cumulative candidate encoding size including child variants.
+`Limits` exposes these budgets to the SDK. Search truncation/reasons and
 metrics are explicit. Raising a limit trades CPU/memory for additional
 counterexamples; it does not convert a bounded search into a proof. CLI exposes
 candidate/instance limits and proof/search ablations.
 
 Wire encoding enforces byte/depth budgets incrementally, before allocating a
 complete oversized output, including strings and repeated nested containers.
+Before deduplication, a capped exact size estimator memoizes shared containers
+and rejects oversized candidates without expanding their complete key tree.
 Source candidate validation memoizes repeated container/schema pairs so shared
 array fillers do not cause exponentially repeated checks before serialization.
 These are application budgets, not OS memory/wall-clock limits.

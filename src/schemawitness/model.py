@@ -19,6 +19,7 @@ class Limits:
     max_number_digits: int = 256
     max_number_exponent: int = 1024
     max_document_bytes: int = 1_000_000
+    max_total_candidate_bytes: int = 8_000_000
 
     def __post_init__(self):
         for key, value in vars(self).items():
@@ -32,7 +33,10 @@ class SchemaIssue(ValueError):
         super().__init__(message)
 
     def diagnostic(self):
-        return {"code": self.code, "path": self.path, "message": self.message}
+        result = {"code": self.code, "path": self.path, "message": self.message}
+        if hasattr(self, "schema"):
+            result["schema"] = self.schema
+        return result
 
 
 @dataclass
@@ -237,7 +241,7 @@ class Compiler:
         if "properties" in schema:
             if not isinstance(schema["properties"], dict):
                 raise SchemaIssue("invalid_schema", path + "/properties", "properties must be an object")
-            s.props = {k: self.compile(v, path + "/properties/" + k, stack, depth + 1)
+            s.props = {k: self.compile(v, path + "/properties/" + k.replace("~", "~0").replace("/", "~1"), stack, depth + 1)
                        for k, v in sorted(schema["properties"].items())}
         for keyword, attr in (("additionalProperties", "additional"), ("items", "items")):
             if keyword in schema:
@@ -331,7 +335,7 @@ def prove_subset(source, target, trace, path="", depth=0):
             if not target.required <= source.required:
                 return False
             for key in sorted(source.props.keys() | target.props.keys()):
-                if not prove_subset(source.prop(key), target.prop(key), trace, path + "/properties/" + key, depth + 1):
+                if not prove_subset(source.prop(key), target.prop(key), trace, path + "/properties/" + key.replace("~", "~0").replace("/", "~1"), depth + 1):
                     return False
             if not prove_subset(source.additional or Shape(), target.additional or Shape(), trace,
                                 path + "/additionalProperties", depth + 1):

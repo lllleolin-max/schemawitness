@@ -2,7 +2,7 @@
 from decimal import Decimal
 from fractions import Fraction
 from .model import Shape, accepts, atom, empty, integer_bounds
-from .wire import value_key
+from .wire import value_key, bounded_wire_size
 
 
 def decimal_fraction(q):
@@ -26,17 +26,30 @@ def decimal_fraction(q):
 class Search:
     def __init__(self, limits):
         self.limits, self.generated, self.truncated = limits, 0, False
+        self.candidate_bytes, self.limit_reasons = 0, set()
+
+    def truncate(self, reason):
+        self.truncated = True
+        self.limit_reasons.add(reason)
 
     def candidates(self, source, target, depth=0):
         seen = set()
         for value in self._values(source, target, depth):
+            size = bounded_wire_size(value, self.limits.max_document_bytes)
+            if size > self.limits.max_document_bytes:
+                self.truncate("candidate_wire_bytes")
+                continue
+            if self.candidate_bytes + size > self.limits.max_total_candidate_bytes:
+                self.truncate("cumulative_candidate_bytes")
+                return
+            self.candidate_bytes += size
             key = value_key(value)
             if key in seen or not accepts(source, value):
                 continue
             seen.add(key)
             self.generated += 1
             if self.generated > self.limits.max_candidates:
-                self.truncated = True
+                self.truncate("candidate_count")
                 return
             yield value
 
@@ -47,13 +60,13 @@ class Search:
         for value in self.candidates(source, target, depth):
             values.append(value)
             if len(values) >= 32:
-                self.truncated = True
+                self.truncate("child_variants")
                 break
         return values
 
     def _values(self, s, t, depth):
         if depth > self.limits.max_depth:
-            self.truncated = True
+            self.truncate("search_depth")
             return
         if s.enum is not None:
             yield from s.enum
@@ -96,7 +109,7 @@ class Search:
                         sizes.update((n, n + 1))
                 for n in sorted(sizes):
                     if n > self.limits.max_instance_units:
-                        self.truncated = True
+                        self.truncate("string_length")
                     else:
                         yield "x" * n
             if kind == "array":
@@ -107,7 +120,7 @@ class Search:
                         sizes.update((n, n + 1))
                 for n in sorted(sizes):
                     if n > self.limits.max_instance_units:
-                        self.truncated = True
+                        self.truncate("array_length")
                     elif n == 0:
                         yield []
                     elif values:
@@ -116,7 +129,7 @@ class Search:
                             yield [value] + [values[0]] * (n - 1)
             if kind == "object":
                 if len(s.required) > self.limits.max_instance_units:
-                    self.truncated = True
+                    self.truncate("object_properties")
                     continue
                 base, options = {}, {}
                 for key in sorted(s.required):
@@ -135,6 +148,6 @@ class Search:
                             vals = self.child_values(s.prop(key), t.prop(key), depth + 1)
                         for value in vals:
                             if len(base) + (key not in base) > self.limits.max_instance_units:
-                                self.truncated = True
+                                self.truncate("object_properties")
                                 break
                             yield {**base, key: value}

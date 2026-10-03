@@ -104,6 +104,39 @@ def loads(text, *, max_bytes=1_000_000):
         raise WireError(str(exc)) from exc
 
 
+def bounded_wire_size(value, cap, memo=None):
+    """Exact encoded size capped at cap+1, memoizing shared containers.
+
+    This checks candidates BEFORE constructing structural de-duplication keys.
+    Repeated child containers contribute their size without expanding the DAG.
+    """
+    if memo is None:
+        memo = {}
+    if not isinstance(value, (list, dict)):
+        try:
+            return len(dumps(value, max_bytes=cap))
+        except WireLimitError:
+            return cap + 1
+    if id(value) in memo:
+        return memo[id(value)]
+    size = 2
+    entries = value if isinstance(value, list) else sorted(value.items())
+    for i, entry in enumerate(entries):
+        if i:
+            size += 1
+        if isinstance(value, dict):
+            key, child = entry
+            size += bounded_wire_size(key, cap, memo) + 1
+        else:
+            child = entry
+        size += bounded_wire_size(child, cap, memo)
+        if size > cap:
+            size = cap + 1
+            break
+    memo[id(value)] = size
+    return size
+
+
 def value_key(value):
     """JSON Schema equality: boolean != number; numeric spelling is irrelevant."""
     from fractions import Fraction

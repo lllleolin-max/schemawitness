@@ -117,7 +117,14 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
                 raise SchemaIssue("invalid_schema", "/" + label + "/" + "/".join(str(p) for p in exc.path),
                                   "invalid 2020-12 schema: " + exc.message) from exc
         oc, nc = Compiler(old, limits), Compiler(new, limits)
-        os, ns = oc.compile(), nc.compile()
+        compiled = []
+        for label, compiler in (("old", oc), ("new", nc)):
+            try:
+                compiled.append(compiler.compile())
+            except SchemaIssue as exc:
+                exc.schema = label
+                raise
+        os, ns = compiled
         result.metrics["normalized_nodes"] = oc.nodes + nc.nodes
     except SchemaIssue as exc:
         result.status = "INVALID" if exc.code.startswith("invalid_") else "UNKNOWN"
@@ -154,7 +161,9 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
                 result.status, result.witness, result.wire = "BREAKING", transported, wire
                 result.validation = {"source": sv, "target": tv, "validator": "jsonschema.Draft202012Validator; exact Decimal integer semantics and equivalent integral representation", "after_wire_roundtrip": True}
                 break
-        result.metrics.update({"generated_candidates": min(engine.generated, limits.max_candidates), "search_truncated": engine.truncated})
+        result.metrics.update({"generated_candidates": min(engine.generated, limits.max_candidates),
+                               "candidate_bytes": engine.candidate_bytes, "search_truncated": engine.truncated,
+                               "search_limit_reasons": sorted(engine.limit_reasons)})
     if result.status == "UNKNOWN":
         result.diagnostics.append({"code": "inclusion_unproved", "path": "", "message":
                                    "sufficient inclusion rules did not prove compatibility; bounded search found no certified witness"})

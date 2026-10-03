@@ -2,7 +2,7 @@ import argparse
 import sys
 from pathlib import Path
 from . import Limits, compare, dumps, loads, review
-from .wire import WireError
+from .wire import WireError, WireLimitError
 
 
 def main(argv=None):
@@ -29,6 +29,9 @@ def main(argv=None):
                          prove=not args.no_proof, search=not args.no_search)
         print(dumps(result.to_dict()))
         return {"COMPATIBLE": 0, "BREAKING": 1, "UNKNOWN": 2, "INVALID": 3}[result.status]
+    except WireLimitError as exc:
+        print(dumps({"status": "UNKNOWN", "diagnostics": [{"code": "resource_limit", "message": str(exc)}]}))
+        return 2
     except (OSError, UnicodeError, WireError, ValueError) as exc:
         print(dumps({"status": "INVALID", "diagnostics": [{"code": "input_error", "message": str(exc)}]}))
         return 3
@@ -45,6 +48,9 @@ def review_main(argv):
         result = review(loads(data.decode("utf-8"), max_bytes=limits.max_document_bytes), limits=limits)
         print(dumps(result))
         return {"COMPATIBLE": 0, "BREAKING": 1, "UNKNOWN": 2, "INVALID": 3}[result["status"]]
+    except WireLimitError as exc:
+        print(dumps({"status": "UNKNOWN", "decision": "BLOCK", "diagnostics": [{"code": "resource_limit", "message": str(exc)}]}))
+        return 2
     except (OSError, UnicodeError, ValueError) as exc:
         print(dumps({"status": "INVALID", "decision": "BLOCK", "diagnostics": [{"code": "input_error", "message": str(exc)}]}))
         return 3

@@ -71,6 +71,10 @@ class DirectionalTests(unittest.TestCase):
         self.assertEqual(r.status, "UNKNOWN")
         self.assertTrue(r.metrics["search_truncated"])
         self.assertEqual(compare({"minimum": Decimal("1E1025")}, True).status, "UNKNOWN")
+        self.assertEqual(compare({"const": 10 ** 5000}, True).diagnostics[0]["code"], "unsupported_numeric_range")
+        r = compare(True, {"properties": {"a/b~c": {"pattern": "x"}}})
+        self.assertEqual(r.diagnostics[0]["schema"], "new")
+        self.assertEqual(r.diagnostics[0]["path"], "/properties/a~1b~0c/pattern")
 
     def test_batch_and_ablation(self):
         manifest = {"operations": [{"id": "POST /orders", "request": {"old": {"type": "integer"}, "new": {"type": "number"}},

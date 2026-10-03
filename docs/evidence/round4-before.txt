@@ -7,7 +7,7 @@ test_wire_budget_bounds_successful_serializations (test_regressions.ReviewRegres
 FAIL: test_reference_target_inside_annotation_keeps_integer_semantics (test_regressions.ReviewRegressions.test_reference_target_inside_annotation_keeps_integer_semantics)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\tests\test_regressions.py", line 64, in test_reference_target_inside_annotation_keeps_integer_semantics
+  File "<repo>/tests\test_regressions.py", line 64, in test_reference_target_inside_annotation_keeps_integer_semantics
     self.assertTrue(independent_validate(schema, Decimal("1.0"))["valid"])
     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AssertionError: False is not true

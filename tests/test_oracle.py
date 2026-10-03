@@ -5,12 +5,13 @@ cannot prove the infinite calculus; it falsifies unsound positives in this grid.
 """
 import itertools
 import unittest
+from decimal import Decimal
 from schemawitness import compare, independent_validate
 
 
 class FiniteOracle(unittest.TestCase):
     def test_all_pairs(self):
-        primitives = [None, False, True, -1, 0, 1, 2, "", "x"]
+        primitives = [None, False, True, -1, 0, 1, 2, Decimal("1.0"), Decimal("0.5"), Decimal("-0.5"), Decimal("1.1"), "", "x"]
         instances = primitives + [[], *[[v] for v in primitives], *[[a, b] for a, b in itertools.product([-1, 0, 1], repeat=2)]]
         instances += [{}, *[{k: v} for k, v in itertools.product(["x", "y", "z"], primitives)],
                       *[{"x": a, "y": b} for a, b in itertools.product([-1, 0, False], repeat=2)]]
@@ -24,7 +25,15 @@ class FiniteOracle(unittest.TestCase):
                    {"type": "object", "properties": {"x": False}},
                    {"type": "object", "required": ["x"]},
                    {"type": "object", "required": ["x"], "properties": {"x": False}},
-                   {"type": "object", "additionalProperties": {"type": "integer"}}]
+                   {"type": "object", "additionalProperties": {"type": "integer"}},
+                   {"type": ["null", "integer"]}, {"enum": [Decimal("1.0"), True]},
+                   {"type": "number", "minimum": Decimal("0.5"), "maximum": Decimal("0.5")},
+                   {"type": "integer", "minimum": Decimal("0.5"), "maximum": Decimal("0.5")},
+                   {"allOf": [{"type": "object", "properties": {"x": True}, "additionalProperties": False},
+                              {"type": "object", "properties": {"y": True}, "additionalProperties": False}]},
+                   {"allOf": [{"type": "array", "items": {"type": "integer"}}, {"minItems": 1, "maxItems": 1}]},
+                   {"$defs": {"N": {"type": "number"}}, "$ref": "#/$defs/N", "minimum": 0},
+                   {"type": "object", "properties": {"x": {"enum": [True, 1]}}, "required": ["x"], "additionalProperties": False}]
         valid = [[independent_validate(s, v)["valid"] for v in instances] for s in schemas]
         for i, j in itertools.product(range(len(schemas)), repeat=2):
             r = compare(schemas[i], schemas[j])
