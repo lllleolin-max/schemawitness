@@ -24,13 +24,16 @@ for source in sorted((repo / "src" / "schemawitness").glob("*.py")):
 assert modules
 identity = {"source_commit": None, "source_metadata": "archive_without_git"}
 if (repo / ".git").exists():
-    top = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=repo, text=True).strip()).resolve()
+    top = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=repo,
+                                      text=True, encoding="utf-8").strip()).resolve()
     assert top == repo, "Git metadata does not belong to this source root"
     dirty = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", "src/schemawitness"], cwd=repo).returncode
     assert dirty == 0, "source changes are not committed; cannot bind installed bytes to HEAD"
-    identity = {"source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip(),
+    identity = {"source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo,
+                                                         text=True, encoding="utf-8").strip(),
                 "source_metadata": "git_checkout"}
 print(json.dumps({"python": platform.python_version(), "schemawitness": metadata.version("schemawitness"),
                   "jsonschema": metadata.version("jsonschema"), "site_packages_import": True,
+                  "referencing": metadata.version("referencing"),
                   "editable": False, "installed_source_match": True, "module_sha256": modules,
                   **identity}, sort_keys=True))

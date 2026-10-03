@@ -155,6 +155,27 @@ or borrowing a parent checkout's identity. In a checkout it requires committed
 source before reporting HEAD. This tooling correction is separate from the
 supported-reference semantic correction.
 
-After correction commit and normal-wheel results are recorded at the following
-documentation freeze. The root-owned old FAIL report/probe remain unchanged.
+After core correction: `e633cbca531b196db17daac8dc31027916678cee`.
+[Normal-wheel unchanged probe](evidence/round6-peer-after.json) reports
+successful=true: both spellings yield wire null, BREAKING, parseable console
+JSON, exit 1 and no traceback. [Wheel tests](evidence/round6-wheel-tests.txt)
+cover all original sixteen tests plus the reference/receipt regressions.
+[Unchanged reviewer oracle run](evidence/round6-pure-oracle.txt) completes
+900 pairs against 99 independently authored member-oracle instances: 271
+COMPATIBLE, 627 BREAKING, 2 UNKNOWN; all four methods/six console cases pass.
+These are builder-run observations of unchanged probes, not a new reviewer score.
+The pure-member probe is also copied unchanged to
+`benchmarks/reviewer_membership_probe.py` for portable reproduction; membership
+is independently authored and neither production helper nor compiler supplies
+its acceptance oracle.
+The unchanged copied file SHA256 is
+`076bdaf54979ad9d53495afdd885ed40f8731f3e544e509b197eb94a0a16f832`.
+
+The first installed checkout receipt also exposed Windows locale decoding of
+Git's UTF-8 Chinese path. Its actual traceback remains ignored locally. Explicit
+UTF-8 Git-output decoding and a live checkout/archive receipt test fix that
+separate tooling defect; no domain semantics were changed after e633cbc.
+The final receipt tool now reports archive SHA as null, refuses uncommitted
+source identity, and checks all nine installed module bytes.
+The root-owned old FAIL report/probe remain unchanged.
 No new independent scores or publication are claimed by the builder.

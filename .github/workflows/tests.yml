@@ -21,4 +21,5 @@ jobs:
       - run: python benchmarks/compare.py
       - run: python benchmarks/adverse.py
       - run: python benchmarks/encoded_pointer_probe.py
+      - run: python benchmarks/reviewer_membership_probe.py
       - run: python examples/workflow.py

@@ -1,0 +1,10 @@
+test_all_pairs_pure_membership_oracle_and_actual_wire (__main__.ReviewerTests.test_all_pairs_pure_membership_oracle_and_actual_wire) ... ok
+test_invalid_unknown_and_resource_limits_fail_closed (__main__.ReviewerTests.test_invalid_unknown_and_resource_limits_fail_closed) ... ok
+test_real_console_roundtrip_exit_codes_source_preservation (__main__.ReviewerTests.test_real_console_roundtrip_exit_codes_source_preservation) ... ok
+test_ref_literals_exact_decimal_and_direction (__main__.ReviewerTests.test_ref_literals_exact_decimal_and_direction) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 3.210s
+
+OK
+{"counts": {"installed_console_cases": 6, "pure_oracle": {"breaking": 627, "compatible": 271, "instances": 99, "pairs": 900, "unknown": 2}}, "successful": true}

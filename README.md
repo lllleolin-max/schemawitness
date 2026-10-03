@@ -26,6 +26,7 @@ python examples/workflow.py
 python benchmarks/compare.py
 python benchmarks/adverse.py
 python benchmarks/encoded_pointer_probe.py
+python benchmarks/reviewer_membership_probe.py
 python -m unittest discover -s tests -v
 ```
 
