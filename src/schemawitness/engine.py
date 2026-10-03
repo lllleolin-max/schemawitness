@@ -26,11 +26,21 @@ def _no_network(uri):
 def _validator_schema(value):
     # Removing the already-checked dialect annotation prevents jsonschema's
     # descend/evolve from switching away from the normative Decimal type checker.
-    if isinstance(value, dict):
-        return {k: _validator_schema(v) for k, v in value.items() if k != "$schema"}
-    if isinstance(value, list):
-        return [_validator_schema(v) for v in value]
-    return value
+    if not isinstance(value, dict):
+        return value
+    result = {k: v for k, v in value.items() if k != "$schema"}
+    for keyword in ("properties", "$defs", "patternProperties", "dependentSchemas"):
+        if keyword in result:
+            result[keyword] = {k: _validator_schema(v) for k, v in result[keyword].items()}
+    for keyword in ("items", "additionalProperties", "not", "if", "then", "else",
+                    "contains", "propertyNames", "unevaluatedProperties", "unevaluatedItems"):
+        if keyword in result:
+            result[keyword] = _validator_schema(result[keyword])
+    for keyword in ("allOf", "anyOf", "oneOf", "prefixItems"):
+        if keyword in result:
+            result[keyword] = [_validator_schema(v) for v in result[keyword]]
+    # enum/const/default/examples contain INSTANCE DATA, not subschemas.
+    return result
 
 
 def _meta_schema(value):

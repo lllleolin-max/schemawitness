@@ -1,0 +1,15 @@
+test_dialect_like_keys_inside_literals (test_regressions.ReviewRegressions.test_dialect_like_keys_inside_literals) ... FAIL
+
+======================================================================
+FAIL: test_dialect_like_keys_inside_literals (test_regressions.ReviewRegressions.test_dialect_like_keys_inside_literals)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\tests\test_regressions.py", line 14, in test_dialect_like_keys_inside_literals
+    self.assertFalse(Draft202012Validator(new).is_valid(value), result.to_dict())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : {'status': 'BREAKING', 'direction': 'request', 'inclusion': 'old_subset_new', 'proof': [], 'witness': {'$schema': 'literal data, not a dialect'}, 'wire': '{"$schema":"literal data, not a dialect"}', 'validation': {'source': {'valid': True, 'errors': []}, 'target': {'valid': False, 'errors': [{'instance_path': [], 'schema_path': ['const'], 'keyword': 'const'}]}, 'validator': 'jsonschema.Draft202012Validator + exact Decimal integer checker', 'after_wire_roundtrip': True}, 'diagnostics': [], 'metrics': {'normalized_nodes': 2, 'proof_steps': 0, 'generated_candidates': 1, 'search_truncated': False}}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.003s
+
+FAILED (failures=1)
