@@ -1,0 +1,17 @@
+test_dialect_like_keys_inside_literals (test_regressions.ReviewRegressions.test_dialect_like_keys_inside_literals) ... ok
+test_json_pointer_array_indices_are_not_python_indices (test_regressions.ReviewRegressions.test_json_pointer_array_indices_are_not_python_indices) ... ok
+test_wire_budget_bounds_successful_serializations (test_regressions.ReviewRegressions.test_wire_budget_bounds_successful_serializations) ... FAIL
+
+======================================================================
+FAIL: test_wire_budget_bounds_successful_serializations (test_regressions.ReviewRegressions.test_wire_budget_bounds_successful_serializations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\tests\test_regressions.py", line 52, in test_wire_budget_bounds_successful_serializations
+    self.assertLessEqual(max(encoded_sizes), 1000, "encoder allocated an oversized complete wire before enforcing its limit")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 3753 not less than or equal to 1000 : encoder allocated an oversized complete wire before enforcing its limit
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.016s
+
+FAILED (failures=1)

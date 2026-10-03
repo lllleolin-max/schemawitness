@@ -43,7 +43,31 @@ tilde escapes and URI percent/UTF-8 escapes before resolution. It handles
 percent-encoded pointer separators and detects reference cycles by target
 identity, including differently encoded aliases.
 
-After: correction commit recorded following commit creation.
+After: `24486f7e893fefdaca8614ec4fd0f309e41caf30`.
 [Actual after output](evidence/round2-after.txt): full suite and expanded
 malformed/escaped/alias-reference regressions pass. External references and
 anchors remain UNKNOWN; no network retrieval is added.
+
+## Round 3 — enforce wire resources before full expansion
+
+Before: `24486f7e893fefdaca8614ec4fd0f309e41caf30`.
+Self-review nested five fixed-length arrays (4 items each) and instrumented
+actual successful serializations with a 1,000-byte document budget. The old
+encoder allocated full wires before the parser rejected their size; the
+largest completed encoding was 3,753 bytes. Repeated nesting could amplify
+this discrepancy well beyond a per-container length cap.
+
+Command: `python -m unittest discover -s tests -p test_regressions.py -v`.
+[Actual before output](evidence/round3-before.txt): FAIL, 3753 > 1000.
+Correction: incremental byte/depth-budgeted wire emission, bounded string
+escaping, cycle rejection, capped diagnostics and memoized source-validation
+of shared filler containers. Oversized schema transport returns UNKNOWN;
+oversized candidates cannot become evidence and remain UNKNOWN if no other
+certified witness exists.
+
+After: correction commit recorded following commit creation.
+[Actual after output](evidence/round3-after.txt): full suite passes; the probe
+never completes an encoding above 1,000 bytes. A 16-way, 12-level shared value
+is rejected during 64-byte emission without expanding its full wire.
+Limitations: no wall-clock or OS sandbox; callers need a limited worker for
+hostile workloads. Per-operation budgets remain separate in batch review.

@@ -36,12 +36,18 @@ booleans are different. jsonschema is used independently, with only its integer
 type predicate extended to exact Decimal integers. No floating-point epsilon
 is used to prove inclusion. Search boundary offsets are finite decimal rationals.
 
-Defaults: 1 MB documents, 2,000 expanded schema nodes, expansion depth 32,
+Defaults: 1 MB documents/witness wires, 2,000 expanded schema nodes, expansion depth 32,
 2,000 generated candidates, 128 units per candidate container/string; 32 child
 variants. `Limits` exposes these budgets to the SDK. Search truncation and
 metrics are explicit. Raising a limit trades CPU/memory for additional
 counterexamples; it does not convert a bounded search into a proof. CLI exposes
 candidate/instance limits and proof/search ablations.
+
+Wire encoding enforces byte/depth budgets incrementally, before allocating a
+complete oversized output, including strings and repeated nested containers.
+Source candidate validation memoizes repeated container/schema pairs so shared
+array fillers do not cause exponentially repeated checks before serialization.
+These are application budgets, not OS memory/wall-clock limits.
 
 The proof is intentionally sufficient, not complete. Equivalent finite
 non-enum shapes and some structurally redundant constraints may remain UNKNOWN.

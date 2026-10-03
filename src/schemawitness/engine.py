@@ -8,7 +8,7 @@ from referencing import Registry
 from referencing.exceptions import NoSuchResource
 from .model import Compiler, Limits, SchemaIssue, prove_subset
 from .search import Search
-from .wire import dumps, loads, WireError
+from .wire import dumps, loads, WireError, WireLimitError
 
 
 def _integer(checker, value):
@@ -106,8 +106,8 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
     limits = limits or Limits()
     result = Result("UNKNOWN", direction, "old_subset_new" if direction == "request" else "new_subset_old")
     try:
-        old = loads(dumps(old), max_bytes=limits.max_document_bytes)
-        new = loads(dumps(new), max_bytes=limits.max_document_bytes)
+        old = loads(dumps(old, max_bytes=limits.max_document_bytes, max_depth=limits.max_depth * 2), max_bytes=limits.max_document_bytes)
+        new = loads(dumps(new, max_bytes=limits.max_document_bytes, max_depth=limits.max_depth * 2), max_bytes=limits.max_document_bytes)
         for label, schema in (("old", old), ("new", new)):
             _preflight(schema, limits, "/" + label)
             try:
@@ -121,6 +121,9 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
     except SchemaIssue as exc:
         result.status = "INVALID" if exc.code.startswith("invalid_") else "UNKNOWN"
         result.diagnostics.append(exc.diagnostic())
+        return result
+    except WireLimitError as exc:
+        result.diagnostics.append({"code": "resource_limit", "path": "", "message": str(exc)})
         return result
     except (WireError, RecursionError, TypeError, ValueError) as exc:
         result.status = "INVALID"
@@ -137,13 +140,14 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
     if search:
         engine = Search(limits)
         for candidate in engine.candidates(source, target):
-            wire = dumps(candidate)
             try:
+                wire = dumps(candidate, max_bytes=limits.max_document_bytes, max_depth=limits.max_depth * 2)
                 transported = loads(wire, max_bytes=limits.max_document_bytes)
                 sv = independent_validate(source_schema, transported)
                 tv = independent_validate(target_schema, transported)
             except (ValueError, RecursionError) as exc:
-                result.diagnostics.append({"code": "validation_limit", "path": "", "message": str(exc)})
+                if len(result.diagnostics) < 8:
+                    result.diagnostics.append({"code": "validation_limit", "path": "", "message": str(exc)})
                 continue
             if sv["valid"] and not tv["valid"]:
                 result.status, result.witness, result.wire = "BREAKING", transported, wire

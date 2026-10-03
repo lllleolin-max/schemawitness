@@ -103,7 +103,14 @@ def atom(value):
     return "object"
 
 
-def accepts(s, value):
+def accepts(s, value, _memo=None):
+    if s == Shape():
+        return True
+    if _memo is None:
+        _memo = {}
+    pair = (id(s), id(value))
+    if isinstance(value, (list, dict)) and pair in _memo:
+        return _memo[pair]
     kind = atom(value)
     if kind not in s.types or (s.enum is not None and
             value_key(value) not in {value_key(v) for v in s.enum}):
@@ -115,10 +122,14 @@ def accepts(s, value):
     if kind == "string":
         return len(value) >= s.min_length and (s.max_length is None or len(value) <= s.max_length)
     if kind == "array":
-        return len(value) >= s.min_items and (s.max_items is None or len(value) <= s.max_items) and all(
-            accepts(s.item(), v) for v in value)
+        result = len(value) >= s.min_items and (s.max_items is None or len(value) <= s.max_items) and all(
+            accepts(s.item(), v, _memo) for v in value)
+        _memo[pair] = result
+        return result
     if kind == "object":
-        return s.required <= value.keys() and all(accepts(s.prop(k), v) for k, v in value.items())
+        result = s.required <= value.keys() and all(accepts(s.prop(k), v, _memo) for k, v in value.items())
+        _memo[pair] = result
+        return result
     return True
 
 

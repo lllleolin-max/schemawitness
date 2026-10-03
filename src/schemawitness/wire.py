@@ -8,33 +8,83 @@ class WireError(ValueError):
     pass
 
 
-def dumps(value):
-    if value is None:
-        return "null"
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, int):
-        return str(value)
-    if isinstance(value, Decimal):
-        if not value.is_finite():
-            raise WireError("non-finite number")
-        return str(value)
-    if isinstance(value, float):
-        if not math.isfinite(value):
-            raise WireError("non-finite number")
-        return json.dumps(value, allow_nan=False)
-    if isinstance(value, str):
-        return json.dumps(value, ensure_ascii=True)
-    if isinstance(value, list):
-        return "[" + ",".join(dumps(v) for v in value) + "]"
-    if isinstance(value, dict) and all(isinstance(k, str) for k in value):
-        return "{" + ",".join(dumps(k) + ":" + dumps(value[k]) for k in sorted(value)) + "}"
-    raise WireError("value must be JSON-compatible; keys must be strings")
+class WireLimitError(WireError):
+    pass
+
+
+def dumps(value, *, max_bytes=None, max_depth=64):
+    """Bound during emission, before allocating an oversized complete wire.
+
+    ensure_ascii makes all emitted text ASCII, so character counts equal bytes.
+    The bounded path escapes strings incrementally too.
+    """
+    pieces, used, active = [], 0, set()
+
+    def emit(token):
+        nonlocal used
+        if max_bytes is not None and used + len(token) > max_bytes:
+            raise WireLimitError("wire exceeds byte limit during serialization")
+        pieces.append(token)
+        used += len(token)
+
+    def encode(v, depth):
+        if depth > max_depth:
+            raise WireLimitError("wire exceeds depth limit during serialization")
+        if v is None:
+            emit("null")
+        elif isinstance(v, bool):
+            emit("true" if v else "false")
+        elif isinstance(v, int):
+            emit(str(v))
+        elif isinstance(v, Decimal):
+            if not v.is_finite():
+                raise WireError("non-finite number")
+            emit(str(v))
+        elif isinstance(v, float):
+            if not math.isfinite(v):
+                raise WireError("non-finite number")
+            emit(json.dumps(v, allow_nan=False))
+        elif isinstance(v, str):
+            if max_bytes is None:
+                emit(json.dumps(v, ensure_ascii=True))
+            else:
+                emit('"')
+                for char in v:
+                    emit(json.dumps(char, ensure_ascii=True)[1:-1])
+                emit('"')
+        elif isinstance(v, (list, dict)):
+            if id(v) in active:
+                raise WireError("cyclic JSON input")
+            active.add(id(v))
+            if isinstance(v, list):
+                emit("[")
+                for i, child in enumerate(v):
+                    if i:
+                        emit(",")
+                    encode(child, depth + 1)
+                emit("]")
+            else:
+                if not all(isinstance(k, str) for k in v):
+                    raise WireError("object keys must be strings")
+                emit("{")
+                for i, key in enumerate(sorted(v)):
+                    if i:
+                        emit(",")
+                    encode(key, depth + 1)
+                    emit(":")
+                    encode(v[key], depth + 1)
+                emit("}")
+            active.remove(id(v))
+        else:
+            raise WireError("value must be JSON-compatible")
+
+    encode(value, 0)
+    return "".join(pieces)
 
 
 def loads(text, *, max_bytes=1_000_000):
     if len(text.encode("utf-8")) > max_bytes:
-        raise WireError("document exceeds byte limit")
+        raise WireLimitError("document exceeds byte limit")
 
     def pairs(items):
         result = {}
