@@ -109,5 +109,5 @@ limit reasons. The original wire estimator regression remains; no oversized
 candidate now reaches the key guard. New tests compare estimated bytes against
 actual serialization and check the cumulative budget.
 [After output](evidence/round5-after.txt) records the full pass. The correction
-commit is recorded after creation. This further correction is substantive code,
+commit is `d03e2213f9ca42df4c9fdeb4e83fd89bee995394`. This further correction is substantive code,
 not one of the three required cycles or a documentation-only change.

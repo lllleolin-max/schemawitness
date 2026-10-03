@@ -4,41 +4,41 @@ test_oversized_shared_values_never_reach_unbounded_dedup_keys (test_search_resou
 ERROR: test_oversized_shared_values_never_reach_unbounded_dedup_keys (test_search_resources.SearchResourceTests.test_oversized_shared_values_never_reach_unbounded_dedup_keys)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\tests\test_search_resources.py", line 19, in test_oversized_shared_values_never_reach_unbounded_dedup_keys
+  File "<repo>/tests\test_search_resources.py", line 19, in test_oversized_shared_values_never_reach_unbounded_dedup_keys
     result = compare(schema, False, limits=Limits(max_document_bytes=1000, max_instance_units=4))
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\src\schemawitness\engine.py", line 150, in compare
+  File "<repo>/src\schemawitness\engine.py", line 150, in compare
     for candidate in engine.candidates(source, target):
                      ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\src\schemawitness\search.py", line 33, in candidates
+  File "<repo>/src\schemawitness\search.py", line 33, in candidates
     key = value_key(value)
-  File "C:\Users\34178\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1175, in __call__
+  File "<python>/Lib/unittest\mock.py", line 1175, in __call__
     return self._mock_call(*args, **kwargs)
            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "C:\Users\34178\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1179, in _mock_call
+  File "<python>/Lib/unittest\mock.py", line 1179, in _mock_call
     return self._execute_mock_call(*args, **kwargs)
            ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "C:\Users\34178\AppData\Local\Python\pythoncore-3.14-64\Lib\unittest\mock.py", line 1240, in _execute_mock_call
+  File "<python>/Lib/unittest\mock.py", line 1240, in _execute_mock_call
     result = effect(*args, **kwargs)
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\tests\test_search_resources.py", line 15, in guarded_key
+  File "<repo>/tests\test_search_resources.py", line 15, in guarded_key
     dumps(value, max_bytes=1000)
     ~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\src\schemawitness\wire.py", line 81, in dumps
+  File "<repo>/src\schemawitness\wire.py", line 81, in dumps
     encode(value, 0)
     ~~~~~~^^^^^^^^^^
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\src\schemawitness\wire.py", line 64, in encode
+  File "<repo>/src\schemawitness\wire.py", line 64, in encode
     encode(child, depth + 1)
     ~~~~~~^^^^^^^^^^^^^^^^^^
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\src\schemawitness\wire.py", line 64, in encode
+  File "<repo>/src\schemawitness\wire.py", line 64, in encode
     encode(child, depth + 1)
     ~~~~~~^^^^^^^^^^^^^^^^^^
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\src\schemawitness\wire.py", line 64, in encode
+  File "<repo>/src\schemawitness\wire.py", line 64, in encode
     encode(child, depth + 1)
     ~~~~~~^^^^^^^^^^^^^^^^^^
   [Previous line repeated 1 more time]
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\src\schemawitness\wire.py", line 60, in encode
+  File "<repo>/src\schemawitness\wire.py", line 60, in encode
     emit("[")
     ~~~~^^^^^
-  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\src\schemawitness\wire.py", line 26, in emit
+  File "<repo>/src\schemawitness\wire.py", line 26, in emit
     raise WireLimitError("wire exceeds byte limit during serialization")
 schemawitness.wire.WireLimitError: wire exceeds byte limit during serialization
 

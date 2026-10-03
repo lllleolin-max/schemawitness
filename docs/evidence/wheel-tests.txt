@@ -12,8 +12,10 @@ test_dialect_like_keys_inside_literals (test_regressions.ReviewRegressions.test_
 test_json_pointer_array_indices_are_not_python_indices (test_regressions.ReviewRegressions.test_json_pointer_array_indices_are_not_python_indices) ... ok
 test_reference_target_inside_annotation_keeps_integer_semantics (test_regressions.ReviewRegressions.test_reference_target_inside_annotation_keeps_integer_semantics) ... ok
 test_wire_budget_bounds_successful_serializations (test_regressions.ReviewRegressions.test_wire_budget_bounds_successful_serializations) ... ok
+test_cumulative_budget_and_size_oracle (test_search_resources.SearchResourceTests.test_cumulative_budget_and_size_oracle) ... ok
+test_oversized_shared_values_never_reach_unbounded_dedup_keys (test_search_resources.SearchResourceTests.test_oversized_shared_values_never_reach_unbounded_dedup_keys) ... ok
 
 ----------------------------------------------------------------------
-Ran 14 tests in 2.549s
+Ran 16 tests in 2.778s
 
 OK
