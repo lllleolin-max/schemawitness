@@ -7,6 +7,7 @@ from pathlib import Path
 import json
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -118,7 +119,7 @@ class EncodedReferenceTests(unittest.TestCase):
                 self.assertEqual(loads(output.getvalue())["status"], "UNKNOWN")
 
     def test_actual_console_source_target_and_direction(self):
-        executable = Path(sys.executable).parent / ("schemawitness.exe" if sys.platform == "win32" else "schemawitness")
+        executable = Path(sysconfig.get_path("scripts")) / ("schemawitness.exe" if sys.platform == "win32" else "schemawitness")
         with tempfile.TemporaryDirectory() as name:
             old, new = Path(name)/"old.json", Path(name)/"new.json"
             for ref in ("#/$defs/N", "#%2F$defs%2FN"):

@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "console": {
+        "exit": 1,
+        "parseable_json": true,
+        "stdout": "{\"diagnostics\":[],\"direction\":\"request\",\"inclusion\":\"old_subset_new\",\"metrics\":{\"candidate_bytes\":4,\"generated_candidates\":1,\"normalized_nodes\":3,\"proof_steps\":0,\"search_limit_reasons\":[],\"search_truncated\":false},\"proof\":[],\"status\":\"BREAKING\",\"validation\":{\"after_wire_roundtrip\":true,\"source\":{\"errors\":[],\"valid\":true},\"target\":{\"errors\":[{\"instance_path\":[],\"keyword\":\"type\",\"schema_path\":[\"type\"]}],\"valid\":false},\"validator\":\"jsonschema.Draft202012Validator; exact Decimal integer semantics, equivalent integral representation, RFC6901 local-fragment resolver adapter\"},\"wire\":\"null\",\"witness\":null}\n",
+        "traceback": false,
+        "valid_evidence": true
+      },
+      "ref": "#/$defs/N",
+      "sdk": {
+        "returned_result": true,
+        "status": "BREAKING",
+        "valid_evidence": true,
+        "wire": "null"
+      }
+    },
+    {
+      "console": {
+        "exit": 1,
+        "parseable_json": true,
+        "stdout": "{\"diagnostics\":[],\"direction\":\"request\",\"inclusion\":\"old_subset_new\",\"metrics\":{\"candidate_bytes\":4,\"generated_candidates\":1,\"normalized_nodes\":3,\"proof_steps\":0,\"search_limit_reasons\":[],\"search_truncated\":false},\"proof\":[],\"status\":\"BREAKING\",\"validation\":{\"after_wire_roundtrip\":true,\"source\":{\"errors\":[],\"valid\":true},\"target\":{\"errors\":[{\"instance_path\":[],\"keyword\":\"type\",\"schema_path\":[\"type\"]}],\"valid\":false},\"validator\":\"jsonschema.Draft202012Validator; exact Decimal integer semantics, equivalent integral representation, RFC6901 local-fragment resolver adapter\"},\"wire\":\"null\",\"witness\":null}\n",
+        "traceback": false,
+        "valid_evidence": true
+      },
+      "ref": "#%2F$defs%2FN",
+      "sdk": {
+        "returned_result": true,
+        "status": "BREAKING",
+        "valid_evidence": true,
+        "wire": "null"
+      }
+    }
+  ],
+  "successful": true
+}

@@ -1,0 +1,5 @@
+{"direction":"request","operation":"POST /orders","status":"BREAKING","wire":"{\"quantity\":1}"}
+{"direction":"response","operation":"POST /orders","status":"BREAKING","wire":"{}"}
+{"direction":"request","operation":"GET /health","status":"COMPATIBLE","wire":null}
+{"direction":"response","operation":"GET /health","status":"COMPATIBLE","wire":null}
+release=BLOCK; two verified wire fixtures available for maintainer review

@@ -61,6 +61,7 @@ request and response; [example](examples/release.json) is the format reference.
 - [Architecture and soundness rules](docs/ARCHITECTURE.md)
 - [Executed comparison and prior art](docs/COMPARISON.md)
 - [Three review cycles](docs/ITERATIONS.md)
+- [Windows console runner correction and controlled verification](docs/CONSOLE_LAYOUT.md)
 - [Bounded commercial pilot](docs/PILOT.md)
 - [Security](SECURITY.md), [contributing](CONTRIBUTING.md), MIT [license](LICENSE)
 

@@ -124,8 +124,8 @@ certificate was claimed for this defect; no Result was produced.
 Archived reproduction: `git archive` of the exact before SHA was built into
 a normal wheel and installed; [receipt](evidence/round6-old-archive-install.json)
 confirms all eight installed modules exactly match the archive. The unchanged
-reviewer SDK/actual-console probe is copied as
-`benchmarks/encoded_pointer_probe.py`, SHA256
+reviewer SDK/actual-console probe was copied at e633cbc/f14bcda as
+`benchmarks/encoded_pointer_probe.py`, historical SHA256
 `010cce8342bff9c99a159486dc917c515ca60aa2724eaffeab75e1c59ddb9d0a`.
 [Actual before result](evidence/round6-peer-before.json) has successful=false;
 canonical URI works, encoded URI raises and console JSON is absent.
@@ -164,11 +164,11 @@ cover all original sixteen tests plus the reference/receipt regressions.
 900 pairs against 99 independently authored member-oracle instances: 271
 COMPATIBLE, 627 BREAKING, 2 UNKNOWN; all four methods/six console cases pass.
 These are builder-run observations of unchanged probes, not a new reviewer score.
-The pure-member probe is also copied unchanged to
+The pure-member probe was also copied unchanged at e633cbc/f14bcda to
 `benchmarks/reviewer_membership_probe.py` for portable reproduction; membership
 is independently authored and neither production helper nor compiler supplies
 its acceptance oracle.
-The unchanged copied file SHA256 is
+Its historical unchanged copied file SHA256 is
 `076bdaf54979ad9d53495afdd885ed40f8731f3e544e509b197eb94a0a16f832`.
 
 The first installed checkout receipt also exposed Windows locale decoding of
@@ -179,3 +179,31 @@ The final receipt tool now reports archive SHA as null, refuses uncommitted
 source identity, and checks all nine installed module bytes.
 The root-owned old FAIL report/probe remain unchanged.
 No new independent scores or publication are claimed by the builder.
+
+## Separate tooling correction — use the installed scripts scheme
+
+Before: `f14bcda909d80a59d6fe8fbb01db344209b9c7f5`. Independent re-review found
+three owned console harnesses assuming that the console lived beside
+`sys.executable`; a standard Windows global interpreter uses prefix/python.exe
+and prefix/Scripts/schemawitness.exe. The registered CLI works, while the
+verification harnesses raise FileNotFoundError. The frozen P2 report and all
+original reviewer assets are preserved by the parent outside this repository.
+
+Correction: only these three harnesses use the interpreter's sysconfig scripts
+installation path. Actual registered-console subprocess calls and all existing
+protocol/wire assertions remain. A focused controlled-prefix driver exercises
+the old archived files versus corrected runners with fourteen actual console
+cases. [Before](evidence/tooling-layout-before.json) records three actual
+FileNotFoundError results; [after](evidence/tooling-layout-after.json) records
+6 + 2 + 6 successful actual console calls. The real global interpreter and
+launcher are used; PYTHONPATH and the alternate-prefix scripts lookup are
+explicitly scoped, not represented as default global installation.
+[Reproduction and limits](CONSOLE_LAYOUT.md) give the exact override mechanism.
+
+This does not add an algorithm review cycle. All nine library modules remain
+identical to `e633cbca531b196db17daac8dc31027916678cee`, and version remains
+0.1.1. The copied owned encoded-pointer/pure-membership probes now have changed
+discovery bytes; the historical SHA values above identify the preserved
+originals, not the current copies. Current normal-wheel verification and
+unchanged-original probe results are recorded in [RELEASE_VERIFICATION](RELEASE_VERIFICATION.md).
+Remote default-global Windows CI remains a parent-run gate.

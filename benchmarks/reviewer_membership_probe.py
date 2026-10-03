@@ -2,6 +2,8 @@
 
 No compiler, proof, accepts, search, wire parser or independent_validate helper
 from the reviewed artifact is used to establish oracle membership.
+This product-owned copy adapts console discovery to the interpreter's scripts
+scheme; the preserved reviewer original and membership oracle remain unchanged.
 """
 from copy import deepcopy
 from decimal import Decimal
@@ -12,6 +14,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import unittest
 from urllib.parse import unquote
@@ -133,7 +136,7 @@ class ReviewerTests(unittest.TestCase):
         self.assertEqual(compare({'type':'integer'},{'type':'number'},prove=False,search=False).status,'UNKNOWN')
 
     def test_real_console_roundtrip_exit_codes_source_preservation(self):
-        executable=Path(sys.executable).parent/('schemawitness.exe' if sys.platform=='win32' else 'schemawitness')
+        executable=Path(sysconfig.get_path('scripts'))/('schemawitness.exe' if sys.platform=='win32' else 'schemawitness')
         with tempfile.TemporaryDirectory() as name:
             base=Path(name);old,new=base/'old.json',base/'new.json'
             cases=[({'type':'integer'},{'type':'number'},0),({'type':'number'},{'type':'integer'},1),

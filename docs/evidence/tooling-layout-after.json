@@ -1,0 +1,33 @@
+{
+  "actual_scripts_console_exit": 1,
+  "actual_scripts_console_status": "BREAKING",
+  "default_global_install_tested": false,
+  "expected_owned_failure": false,
+  "module_import_override": "PYTHONPATH=<prefix>/Lib/site-packages",
+  "normal_prefix_package_import": true,
+  "real_global_interpreter_unchanged": true,
+  "registered_launcher_matches_interpreter": true,
+  "remote_ci_tested": false,
+  "results": [
+    {
+      "actual_console_attempts": 6,
+      "exception": null,
+      "file": "tests/test_encoded_refs.py"
+    },
+    {
+      "actual_console_attempts": 2,
+      "exception": null,
+      "file": "benchmarks/encoded_pointer_probe.py"
+    },
+    {
+      "actual_console_attempts": 6,
+      "exception": null,
+      "file": "benchmarks/reviewer_membership_probe.py"
+    }
+  ],
+  "scheme": "nt",
+  "scope": "controlled pip --prefix installation; user global installation untouched",
+  "scripts_directory": "Scripts",
+  "scripts_lookup_override": "sysconfig.get_path('scripts') scoped with scheme=nt and base/platbase=<prefix>",
+  "successful": true
+}

@@ -1,17 +1,19 @@
-"""Unchanged portable supported-reference SDK and actual console reproducer.
+"""Product-owned copy of the supported-reference SDK/console reproducer.
 
 Exit 0 requires both equivalent pointer spellings to yield valid BREAKING JSON.
-The current rejected artifact crashes only for the encoded spelling.
+Only console discovery differs from the preserved original reviewer probe:
+use this interpreter's script installation scheme, including global Windows.
 """
 import json
 from pathlib import Path
 import subprocess
 import sys
+import sysconfig
 import tempfile
 from schemawitness import compare
 
 results=[]
-executable=Path(sys.executable).parent/('schemawitness.exe' if sys.platform=='win32' else 'schemawitness')
+executable=Path(sysconfig.get_path('scripts'))/('schemawitness.exe' if sys.platform=='win32' else 'schemawitness')
 with tempfile.TemporaryDirectory() as name:
     old,new=Path(name)/'old.json',Path(name)/'new.json'
     old.write_text('true',encoding='utf-8')
