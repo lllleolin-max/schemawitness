@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
 from urllib.parse import unquote
+import re
 from .wire import value_key
 
 ATOMS = frozenset({"null", "boolean", "integer", "real", "string", "array", "object"})
@@ -232,18 +233,33 @@ class Compiler:
                 setattr(s, attr, self.compile(schema[keyword], path + "/" + keyword, stack, depth + 1))
         if "$ref" in schema:
             ref = schema["$ref"]
-            if not isinstance(ref, str) or not (ref == "#" or ref.startswith("#/")):
+            if not isinstance(ref, str) or not ref.startswith("#"):
                 raise SchemaIssue("unsupported_reference", path + "/$ref", "only same-document JSON Pointer references are supported")
-            if ref in stack:
-                raise SchemaIssue("recursive_reference", path + "/$ref", "recursive references are not supported")
+            if re.search(r"%(?![0-9A-Fa-f]{2})", ref):
+                raise SchemaIssue("invalid_reference", path + "/$ref", "invalid percent escape in reference")
+            try:
+                pointer = unquote(ref[1:], errors="strict")
+            except UnicodeError as exc:
+                raise SchemaIssue("invalid_reference", path + "/$ref", "reference fragment is not valid UTF-8") from exc
+            if pointer and not pointer.startswith("/"):
+                raise SchemaIssue("unsupported_reference", path + "/$ref", "anchors are unsupported; use a JSON Pointer fragment")
+            if re.search(r"~(?![01])", pointer):
+                raise SchemaIssue("invalid_reference", path + "/$ref", "invalid JSON Pointer tilde escape")
             target = self.root
             try:
-                for part in unquote(ref[2:]).split("/") if ref != "#" else []:
+                for part in pointer[1:].split("/") if pointer else []:
                     key = part.replace("~1", "/").replace("~0", "~")
-                    target = target[int(key)] if isinstance(target, list) else target[key]
+                    if isinstance(target, list):
+                        if not re.fullmatch(r"0|[1-9][0-9]*", key):
+                            raise ValueError("invalid array index token")
+                        target = target[int(key)]
+                    else:
+                        target = target[key]
             except (KeyError, IndexError, ValueError, TypeError) as exc:
                 raise SchemaIssue("invalid_reference", path + "/$ref", "reference target does not exist: " + ref) from exc
-            s = meet(s, self.compile(target, ref[1:], stack + (ref,), depth + 1))
+            if id(target) in stack:
+                raise SchemaIssue("recursive_reference", path + "/$ref", "recursive references are not supported")
+            s = meet(s, self.compile(target, pointer, stack + (id(target),), depth + 1))
         if "allOf" in schema:
             values = schema["allOf"]
             if not isinstance(values, list) or not values:

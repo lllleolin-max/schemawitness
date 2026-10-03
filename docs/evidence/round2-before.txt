@@ -1,0 +1,19 @@
+test_dialect_like_keys_inside_literals (test_regressions.ReviewRegressions.test_dialect_like_keys_inside_literals) ... ok
+test_json_pointer_array_indices_are_not_python_indices (test_regressions.ReviewRegressions.test_json_pointer_array_indices_are_not_python_indices) ... FAIL
+
+======================================================================
+FAIL: test_json_pointer_array_indices_are_not_python_indices (test_regressions.ReviewRegressions.test_json_pointer_array_indices_are_not_python_indices)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\coding ����\GitHubˮ��\work\ten-projects\schemawitness\tests\test_regressions.py", line 26, in test_json_pointer_array_indices_are_not_python_indices
+    self.assertEqual(result.status, "INVALID", (pointer, result.to_dict()))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'COMPATIBLE' != 'INVALID'
+- COMPATIBLE
++ INVALID
+ : ('#/allOf/-1', {'status': 'COMPATIBLE', 'direction': 'request', 'inclusion': 'old_subset_new', 'proof': [{'path': '', 'rule': 'product-inclusion', 'types': ['integer']}], 'witness': None, 'wire': None, 'validation': {}, 'diagnostics': [], 'metrics': {'normalized_nodes': 4, 'proof_steps': 1}})
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.002s
+
+FAILED (failures=1)
