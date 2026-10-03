@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["quantity"],"properties":{"quantity":{"type":"integer","minimum":1},"discount":{"type":"number","minimum":0}},"additionalProperties":false}
