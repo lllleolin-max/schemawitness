@@ -23,24 +23,17 @@ def _no_network(uri):
     raise NoSuchResource(ref=uri)
 
 
-def _validator_schema(value):
-    # Removing the already-checked dialect annotation prevents jsonschema's
-    # descend/evolve from switching away from the normative Decimal type checker.
-    if not isinstance(value, dict):
-        return value
-    result = {k: v for k, v in value.items() if k != "$schema"}
-    for keyword in ("properties", "$defs", "patternProperties", "dependentSchemas"):
-        if keyword in result:
-            result[keyword] = {k: _validator_schema(v) for k, v in result[keyword].items()}
-    for keyword in ("items", "additionalProperties", "not", "if", "then", "else",
-                    "contains", "propertyNames", "unevaluatedProperties", "unevaluatedItems"):
-        if keyword in result:
-            result[keyword] = _validator_schema(result[keyword])
-    for keyword in ("allOf", "anyOf", "oneOf", "prefixItems"):
-        if keyword in result:
-            result[keyword] = [_validator_schema(v) for v in result[keyword]]
-    # enum/const/default/examples contain INSTANCE DATA, not subschemas.
-    return result
+def _validator_instance(value):
+    # Same mathematical JSON value, with integral Decimals represented as ints.
+    # This survives jsonschema's dialect-specific validator switching for refs
+    # into arbitrary schema-shaped locations, without changing ANY schema data.
+    if isinstance(value, Decimal) and Fraction(value).denominator == 1:
+        return int(value)
+    if isinstance(value, dict):
+        return {k: _validator_instance(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_validator_instance(v) for v in value]
+    return value
 
 
 def _meta_schema(value):
@@ -54,8 +47,8 @@ def _meta_schema(value):
 
 
 def independent_validate(schema, value):
-    validator = ExactValidator(_validator_schema(schema), registry=Registry(retrieve=_no_network))
-    errors = sorted(validator.iter_errors(value), key=lambda e: (str(list(e.path)), str(list(e.schema_path))))
+    validator = ExactValidator(schema, registry=Registry(retrieve=_no_network))
+    errors = sorted(validator.iter_errors(_validator_instance(value)), key=lambda e: (str(list(e.path)), str(list(e.schema_path))))
     return {"valid": not errors, "errors": [{"instance_path": list(e.path),
             "schema_path": list(e.schema_path), "keyword": e.validator} for e in errors[:8]]}
 
@@ -84,15 +77,21 @@ def _preflight(value, limits, path="", depth=0, count=None):
         raise SchemaIssue("resource_limit", path, "input tree exceeds resource limit")
     if isinstance(value, (int, Decimal)) and not isinstance(value, bool):
         decimal = Decimal(value)
+        if not decimal.is_finite():
+            raise WireError("non-finite JSON number")
         if len(decimal.as_tuple().digits) > limits.max_number_digits or abs(decimal.as_tuple().exponent) > limits.max_number_exponent:
             raise SchemaIssue("unsupported_numeric_range", path,
                               "numeric literal exceeds configured digit/exponent limits; never rounded")
     if isinstance(value, dict):
         for key, child in value.items():
+            if not isinstance(key, str):
+                raise WireError("object keys must be strings")
             _preflight(child, limits, path + "/" + key.replace("~", "~0").replace("/", "~1"), depth + 1, count)
     if isinstance(value, list):
         for i, child in enumerate(value):
             _preflight(child, limits, path + "/" + str(i), depth + 1, count)
+    if isinstance(value, str) and len(value) > limits.max_document_bytes:
+        raise SchemaIssue("resource_limit", path, "string exceeds document budget")
 
 
 def compare(old, new, *, direction="request", limits=None, prove=True, search=True):
@@ -106,6 +105,8 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
     limits = limits or Limits()
     result = Result("UNKNOWN", direction, "old_subset_new" if direction == "request" else "new_subset_old")
     try:
+        _preflight(old, limits, "/old")
+        _preflight(new, limits, "/new")
         old = loads(dumps(old, max_bytes=limits.max_document_bytes, max_depth=limits.max_depth * 2), max_bytes=limits.max_document_bytes)
         new = loads(dumps(new, max_bytes=limits.max_document_bytes, max_depth=limits.max_depth * 2), max_bytes=limits.max_document_bytes)
         for label, schema in (("old", old), ("new", new)):
@@ -151,7 +152,7 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
                 continue
             if sv["valid"] and not tv["valid"]:
                 result.status, result.witness, result.wire = "BREAKING", transported, wire
-                result.validation = {"source": sv, "target": tv, "validator": "jsonschema.Draft202012Validator + exact Decimal integer checker", "after_wire_roundtrip": True}
+                result.validation = {"source": sv, "target": tv, "validator": "jsonschema.Draft202012Validator; exact Decimal integer semantics and equivalent integral representation", "after_wire_roundtrip": True}
                 break
         result.metrics.update({"generated_candidates": min(engine.generated, limits.max_candidates), "search_truncated": engine.truncated})
     if result.status == "UNKNOWN":

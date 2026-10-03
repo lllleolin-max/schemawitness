@@ -32,8 +32,12 @@ UNKNOWN, never rounding. These are implementation resource limits, **not** a
 claim that the normative numeric universe stops there. Inclusion rules reason
 over unbounded mathematical integers and real numbers; decimal witnesses are
 constructed exactly. `1`, `1.0`, and `1e0` are equal numbers and all integers;
-booleans are different. jsonschema is used independently, with only its integer
-type predicate extended to exact Decimal integers. No floating-point epsilon
+booleans are different. jsonschema is used independently on the original
+schemas, with its integer type predicate extended to exact Decimal integers.
+Integral Decimal instances are represented by equivalent mathematical ints
+inside that validator to preserve integer semantics when it switches dialect
+classes while resolving references. No schema assertions/data are transformed.
+No floating-point epsilon
 is used to prove inclusion. Search boundary offsets are finite decimal rationals.
 
 Defaults: 1 MB documents/witness wires, 2,000 expanded schema nodes, expansion depth 32,

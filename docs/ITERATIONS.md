@@ -65,9 +65,27 @@ of shared filler containers. Oversized schema transport returns UNKNOWN;
 oversized candidates cannot become evidence and remain UNKNOWN if no other
 certified witness exists.
 
-After: correction commit recorded following commit creation.
+After: `ea4ae96cc57399c6d4fbf247c08a56635ed03c34`.
 [Actual after output](evidence/round3-after.txt): full suite passes; the probe
 never completes an encoding above 1,000 bytes. A 16-way, 12-level shared value
 is rejected during 64-byte emission without expanding its full wire.
 Limitations: no wall-clock or OS sandbox; callers need a limited worker for
 hostile workloads. Per-operation budgets remain separate in batch review.
+
+## Additional pre-release review — preserve integer semantics through ref switching
+
+Before: `ea4ae96cc57399c6d4fbf247c08a56635ed03c34`.
+After the required three cycles, a broader reference probe found a further
+edge: a reference into an annotation containing a schema object could make
+jsonschema switch back to its stock integer predicate. A `1.0` wire value was
+rejected as a noninteger, and the search-only ablation could emit false evidence.
+[Before output](evidence/round4-before.txt): regression FAIL.
+
+Correction: independently validate the untouched original schema; represent
+transported integral Decimals by equivalent mathematical ints inside the
+independent validator. This preserves JSON Schema equality while surviving
+validator-class switching without any schema rewriting. Input preflight also
+runs before SDK serialization to catch oversized numeric literals precisely.
+[After output](evidence/round4-after.txt): full suite passes, including the
+arbitrary-location reference and search-only regression.
+After correction commit is recorded following creation.

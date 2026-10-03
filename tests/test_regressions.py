@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
-from schemawitness import compare, loads, dumps, Limits
+from decimal import Decimal
+from schemawitness import compare, loads, dumps, Limits, independent_validate
 from jsonschema import Draft202012Validator
 
 
@@ -57,6 +58,11 @@ class ReviewRegressions(unittest.TestCase):
             dumps(shared, max_bytes=64)
         self.assertEqual(loads(dumps("汉字\n", max_bytes=32)), "汉字\n")
         self.assertEqual(compare({"const": "x" * 1001}, True, limits=Limits(max_document_bytes=1000)).status, "UNKNOWN")
+
+    def test_reference_target_inside_annotation_keeps_integer_semantics(self):
+        schema = {"default": {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "integer"}, "$ref": "#/default"}
+        self.assertTrue(independent_validate(schema, Decimal("1.0"))["valid"])
+        self.assertEqual(compare({"const": Decimal("1.0")}, schema, prove=False).status, "UNKNOWN")
 
 
 if __name__ == "__main__":
