@@ -214,3 +214,64 @@ binds all nine installed module hashes to this correction SHA. The subsequent
 verification freeze adds this receipt/provenance only; library and runner
 source remain unchanged. A receipt generated at the final frozen HEAD is
 available from `python benchmarks/verify_install.py` without any source edits.
+
+## 0.2.0 round 1 — bounded sharing, measured baseline
+
+Baseline: `63eb34a67574e23c46f798008826b825d411567a`, ordinary canonical LF
+archive/wheel/site association of nine modules, 24/24 installed tests in
+6.445 s. The remote README-only `a46a4a57a12e80d8be960ddffa6d4e1cec29e1fb`
+was fast-forwarded and preserved. Baseline 100 repeated/distinct operations
+each made 200 core comparisons, 400 compiler expansions, 200 proof entries and
+200 search entries. This is the disclosed original per-direction contract,
+not a retrospective aggregate-budget defect.
+
+Implementation: `aab4ec0`. New opt-in BatchLimits shares explicit application
+work and bounds input/cache/result payloads. Full shape validation precedes
+core work, and per-call typed full-document/direction cache identities precede
+normalization. Original compare/default review semantics and independent wire
+validation remain. Ordinary installation matched all ten package modules and
+passed 33/33 tests in 6.980 s. Repeated comparisons fell to two; distinct stayed
+200 and was slower/more memory-intensive. [BATCH](BATCH.md) retains both costs.
+
+## 0.2.0 round 2 — resources, precision and composition
+
+Before `aab4ec0`: a malformed operation with 100,003 keys allocated 4,195,768 B
+for `set(operation)` before rejection. The focused actual probe and regression
+failed its additional-allocation bound. Correction `dfe86cb` tests dictionary
+field count before constructing only the expected 1/2/3-key sets. The same
+ordinary-wheel probe then allocated 1,176 B and remained INVALID/core zero.
+This is a resource correction, not a new compatibility rule.
+
+The corrected ordinary install passed 34/34 tests in 8.740 s, the unchanged
+900-pair/99-instance pure-membership probe, and the 80-unit aggregate case.
+Tests cover detached cached results, changed shared documents, bool/int/
+Decimal/float identities, original Decimal precision, encoded pointers and
+full local targets, unsupported external references, backend failure, 120 new
+schema pairs/240 directions against single comparisons and independent standard
+membership on every emitted witness, plus exact work/input/cache/result bounds.
+The standard-membership family uses integer-only numeric constraints; retained
+precision regressions and the separate exact pure oracle cover Decimal behavior.
+
+The first ordinary-install integration driver incorrectly expected only three
+BREAKING checks for a precise const-versus-maximum pair. Both request and
+response inclusions actually break, giving six. Original driver/failure and
+its corrected copy remain separate in local build evidence; no product fix is
+claimed for that harness error. The corrected driver made 35 real sysconfig
+console calls across native/PYTHONUTF8=0/1/cp936/cp1252, with ASCII machine JSON,
+expected exits, exact wire values and protected inputs. Both SDK examples pass.
+
+## 0.2.0 round 3 — final install and accounting review
+
+Added multibyte exact-wire payload/storage boundaries and a sweep checking each
+backend invocation against the charged ledger before exhaustion. No additional
+semantic defect was found; this round does not manufacture a third new bug.
+README, architecture, security, changelog and the offline benchmark describe
+work units, separate precheck cost, serialized storage versus Python/RSS,
+UNKNOWN/provenance envelope overhead and distinct/small-input counterexamples.
+Caller concurrent mutation and cross-call cache persistence remain unsupported.
+
+The final ordinary source/wheel/site and console verification is generated at
+the clean exact final SHA by the builder; it is separate from the later peer
+review, scores and remote publication/CI. Historical correction rounds and
+failure records above remain unchanged. No independent score, adoption,
+production performance or revenue result is inferred from these self-reviews.

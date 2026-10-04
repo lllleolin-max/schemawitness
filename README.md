@@ -63,6 +63,45 @@ Request/response source and target labels are explained by the `inclusion` field
 Batch input uses unique operation IDs and embedded old/new schemas for both
 request and response; [example](examples/release.json) is the format reference.
 
+## Shared batch work / 整批工作预算
+
+Version 0.2 adds an opt-in budget and pair cache for a single review call.
+`compare(...)` and `review(manifest)` retain their original per-direction
+`Limits`. Those limits never promised a shared total across operations.
+
+```python
+from schemawitness import BatchLimits, review
+
+report = review(manifest, batch_limits=BatchLimits(max_work=10_000))
+assert report["decision"] in {"ALLOW", "BLOCK"}
+print(report["batch"]["work_used"], report["batch"]["core_compare_calls"])
+```
+
+```console
+schemawitness review examples/release.json --batch-max-work 10000
+python examples/batch_review.py
+python benchmarks/batch_work.py --batch-work 100000 --out batch-work-new.json
+```
+
+The example is offline and synthetic. The benchmark requires a new output
+filename and counts actual comparisons, expansions, search and backend calls,
+including full input/cache/result handling. Use `--operations 1` for a small
+case; omit `--batch-work` to measure the original behavior.
+
+Complete operation shape and unique IDs are checked before any comparison.
+With a shared budget, each operation still receives request/response evidence
+and its own provenance. Equal original documents reuse a check only in the
+same direction. Cache results are detached copies; changing an input before a
+later review cannot reuse an earlier call's cache. An exhausted work, input or
+storage bound returns typed UNKNOWN for unevaluated directions and BLOCK.
+Only completed checks retain their actual proof or certified wire witness.
+
+The work ledger counts application calls, rather than CPU instructions or
+wall-clock time. The cache is private to one call; there is no network lookup,
+cross-process persistence or concurrent-mutation contract. Serialized storage
+caps do not bound Python object overhead or RSS. See [exact budget accounting
+and measured costs](docs/BATCH.md) before applying it to hostile input.
+
 ## Use the result in a review / 接入契约审查
 
 Supply effective old/new JSON schemas, rather than an OpenAPI document, and select the direction that matches the consumer. Copy the JSON text in `wire` into a regression fixture and preserve the source/target validation evidence with the review. `wire` is a JSON string containing the instance text: parse it once to obtain the instance, rather than testing the outer report string.
@@ -72,6 +111,7 @@ For a release, put operation schemas in [a review manifest](examples/release.jso
 ## Evidence and scope
 
 - [Architecture and soundness rules](docs/ARCHITECTURE.md)
+- [Shared batch bounds and synthetic measurements](docs/BATCH.md)
 - [Executed comparison and prior art](docs/COMPARISON.md)
 - [Three review cycles](docs/ITERATIONS.md)
 - [Windows console runner correction and controlled verification](docs/CONSOLE_LAYOUT.md)

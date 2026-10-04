@@ -165,6 +165,43 @@ class BatchReviewTests(unittest.TestCase):
         self.assertEqual(r["status"], "UNKNOWN")
         self.assertEqual(r["batch"]["core_compare_calls"], 0)
 
+    def test_multibyte_input_and_cached_witness_budget_boundaries(self):
+        old = {"const": {"\u6c49\u03bb\U0001f642": Decimal("0.100000000000000000000000000001")}}
+        new = {"const": {"\u6c49\u03bb\U0001f642": Decimal("0.1")}}
+        m = manifest([(old, new)] * 2)
+        normal = review(m, batch_limits=BatchLimits())
+        self.assertEqual(normal["counts"]["BREAKING"], 4)
+        self.assertEqual(normal["batch"]["input_bytes"], len(dumps(m)))
+        self.assertEqual(normal["batch"]["cache_hits"], 2)
+        self.assertTrue(normal["operations"][1]["request"]["wire"].isascii())
+        for field, size in (("max_input_bytes", normal["batch"]["input_bytes"]),
+                            ("max_cache_bytes", normal["batch"]["cache_bytes"]),
+                            ("max_result_bytes", normal["batch"]["result_bytes"])):
+            for delta in (-1, 0, 1):
+                r = review(m, batch_limits=BatchLimits(**{field: size + delta}))
+                if delta < 0:
+                    self.assertIsNotNone(r["batch"]["halted"])
+                    self.assertEqual(r["operations"][-1]["response"]["status"], "UNKNOWN")
+                    self.assertIsNone(r["operations"][-1]["response"]["wire"])
+                    self.assertEqual(r["operations"][-1]["response"]["validation"], {})
+                else:
+                    self.assertIsNone(r["batch"]["halted"])
+                    self.assertEqual(r["counts"]["BREAKING"], 4)
+
+    def test_budget_exhausts_before_each_backend_boundary(self):
+        m = manifest([(True, True)])
+        normal = review(m, batch_limits=BatchLimits())
+        for maximum in range(normal["batch"]["work_used"] + 1):
+            with patch.object(engine.Draft202012Validator, "check_schema", wraps=engine.Draft202012Validator.check_schema) as meta, \
+                 patch.object(validation, "_resolver", wraps=validation._resolver) as roots:
+                r = review(m, batch_limits=BatchLimits(max_work=maximum))
+            by_kind = r["batch"]["work_by_kind"]
+            self.assertEqual(meta.call_count, by_kind.get("backend_meta_schema", 0))
+            self.assertEqual(roots.call_count, by_kind.get("backend_reference_root", 0))
+            self.assertLessEqual(r["batch"]["work_used"], maximum)
+            if maximum < normal["batch"]["work_used"]:
+                self.assertEqual(r["decision"], "BLOCK")
+
     def test_120_single_batch_pairs_with_independent_membership(self):
         rng = random.Random(20261005)
         pairs = []

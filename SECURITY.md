@@ -15,6 +15,23 @@ process for hostile input. No wall-clock limit or authenticated schema identity
 is promised. Keep jsonschema/referencing dependencies patched within their
 supported major version and rerun the independent oracle after upgrades.
 
+`BatchLimits` is opt-in and shares application work across one SDK review.
+Its work units do not account for every internal jsonschema step, Fraction
+operation, equality check or Python allocation. Input validation, identity
+hashing, serialization and detached copies have separately bounded inputs and
+storage, but their cost is outside the work ledger. Cache byte bounds describe
+serialized payloads and fingerprints, not Python heap or process RSS. Output
+UNKNOWN/provenance envelopes also remain outside the result-payload byte cap.
+This remains an in-process checker; use an externally limited worker for
+untrusted input. Shape validation scans caller-owned mappings/IDs before the
+aggregate input traversal; the library cannot bound memory already allocated
+by its caller. Do not mutate a shared manifest concurrently with a review.
+
+The pair digest is a cache identity, not a signature or source authorization.
+The cache is discarded when review returns and never serves a different call.
+It stores the original-document/direction result after all existing validation
+and evidence checks; unsupported assertions or backend failure remain UNKNOWN.
+
 Report security defects via the repository's private vulnerability reporting
 feature when available; otherwise open an issue with a minimal nonsensitive
 reproducer. Do not include credentials, real customer payloads or private URLs.

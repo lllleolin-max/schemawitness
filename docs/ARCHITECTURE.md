@@ -67,3 +67,33 @@ or a wall-clock timeout. Run hostile inputs in a separately limited worker.
 The `--no-proof` ablation retains counterexamples but leaves safe widening
 UNKNOWN; `--no-search` retains proofs but leaves failing inclusion UNKNOWN.
 Keeping them separate makes both kinds of evidence operationally meaningful.
+
+## Optional whole-review work ledger
+
+`review(..., batch_limits=BatchLimits(...))` validates the complete operation
+shape and unique IDs first. An input traversal checks JSON types, cycles,
+depth, numeric literal bounds and an aggregate node/ASCII wire-byte budget.
+It precedes schema normalization. The separate input bounds include repeated
+occurrences of shared containers; they do not deduplicate a caller's DAG.
+
+Each pair key includes direction and SHA-256 identities of the full original
+old/new documents. The identity encodes container boundaries, sorted string
+keys, array order, scalar type and exact wire spelling. It distinguishes
+bool/int/Decimal/float, Decimal trailing zeros and negative zero. It does not
+use Python numeric equality, normalized constraints or resolved target alone.
+Same-document `$defs`, annotations, reference spellings and encoded pointer
+targets therefore participate. There is no cache across calls or trust domains.
+
+One ledger charges before each cache lookup/store, compiler expansion, proof
+entry, search entry, candidate attempt, independent metaschema check,
+independent reference-root construction/reference lookup and membership call.
+The same object reaches recursive compiler/proof/search calls. Exceeding the
+ledger aborts the current check and discards all partial proof/witness data.
+All remaining directions receive typed UNKNOWN, including would-be cache hits.
+
+Completed results are cached and returned as separate deep copies. Cache
+capacity/serialized bytes and cumulative retained result-payload bytes are
+checked separately and also halt remaining work when exhausted. Byte counters
+exclude Python object overhead; UNKNOWN/provenance/report envelopes are bounded
+by input/operation limits rather than the retained-payload byte cap. Exact
+counting definitions, tests and limitations are in [BATCH](BATCH.md).

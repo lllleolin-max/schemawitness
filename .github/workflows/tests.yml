@@ -23,3 +23,5 @@ jobs:
       - run: python benchmarks/encoded_pointer_probe.py
       - run: python benchmarks/reviewer_membership_probe.py
       - run: python examples/workflow.py
+      - run: python examples/batch_review.py
+      - run: python benchmarks/batch_work.py --batch-work 100000 --out batch-work.json
