@@ -18,6 +18,22 @@ Input bytes count exact ASCII JSON from `dumps`, including escaped Unicode.
 An input-limit result records zero input counters because traversal did not
 complete; it does not imply an empty caller-owned input.
 
+Legal increases to `Limits.max_depth` are preserved, but do not guarantee that
+Python can recurse that far. Stack exhaustion during the batch's input scan,
+typed identity, result conversion or detached copy returns
+`batch_recursion_limit`, complete directional UNKNOWN results and BLOCK. The
+input-scan case makes no core calls. An interrupted later check drops its
+certificate; earlier completed checks retain theirs. The core comparison call
+is outside these narrow tree-transform guards, so unexpected engine errors are
+not hidden as budget exhaustion.
+
+Serialized result payloads use a depth of `2 * Limits.max_depth + 8`, allowing
+the configured nested witness plus its result envelope. They continue to count
+the same exact bytes against cache/result storage budgets. Expected transport
+depth exhaustion returns `batch_result_depth_limit`; no truncated witness is
+certified. Input and result payload depth bounds do not raise the interpreter's
+stack limit or guarantee support for arbitrarily deep schemas.
+
 Work charges one unit **before** each:
 
 - cache lookup (including identity calculation) and successful store attempt;

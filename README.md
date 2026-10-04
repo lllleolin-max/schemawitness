@@ -96,6 +96,13 @@ later review cannot reuse an earlier call's cache. An exhausted work, input or
 storage bound returns typed UNKNOWN for unevaluated directions and BLOCK.
 Only completed checks retain their actual proof or certified wire witness.
 
+Raising `Limits.max_depth` does not raise Python's recursion limit. If an owned
+batch input, identity or result-copy traversal exhausts the interpreter stack,
+the affected and remaining checks return UNKNOWN/BLOCK with
+`batch_recursion_limit`. Completed earlier checks retain their evidence. Result
+transport uses the configured depth plus its report envelope, so a supported
+deep wire witness is not rejected by an unrelated default serialization depth.
+
 The work ledger counts application calls, rather than CPU instructions or
 wall-clock time. The cache is private to one call; there is no network lookup,
 cross-process persistence or concurrent-mutation contract. Serialized storage

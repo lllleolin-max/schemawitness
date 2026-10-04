@@ -27,6 +27,14 @@ untrusted input. Shape validation scans caller-owned mappings/IDs before the
 aggregate input traversal; the library cannot bound memory already allocated
 by its caller. Do not mutate a shared manifest concurrently with a review.
 
+Configured schema depth is distinct from interpreter stack capacity. Expected
+RecursionError at batch-owned input traversal, identity hashing, result
+conversion, serialization or detached copying closes the batch as UNKNOWN/BLOCK
+without a certificate for the interrupted check. An oversized result transport
+returns `batch_result_depth_limit`. These guards do not catch unexpected core
+comparison errors or other RuntimeError exceptions and do not make this an OS
+resource sandbox.
+
 The pair digest is a cache identity, not a signature or source authorization.
 The cache is discarded when review returns and never serves a different call.
 It stores the original-document/direction result after all existing validation

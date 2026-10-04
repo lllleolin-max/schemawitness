@@ -275,3 +275,44 @@ the clean exact final SHA by the builder; it is separate from the later peer
 review, scores and remote publication/CI. Historical correction rounds and
 failure records above remain unchanged. No independent score, adoption,
 production performance or revenue result is inferred from these self-reviews.
+
+## Independent pre-release depth correction — one related boundary repair
+
+Before: `e3b2b090b19e8b097f9087b8afd8923fe8105748` (candidate 0.2.0).
+An independent ordinary-wheel probe passed legal `Limits(max_depth=2000)` to
+an acyclic 1,100-level `items` schema. Default review returned two controlled
+INVALID results/BLOCK; opt-in review raised RecursionError in its input scan.
+The unchanged probe failed with exit 1, and its original file and failure
+record remain immutable in the independent review namespace.
+
+During the same repair, an ordinary-wheel composition probe used an 80-level
+const array with `Limits(max_depth=200)`. Default review retained all four
+directional checks and a real wire witness. Shared review instead raised
+WireLimitError because result-cache serialization used its unrelated default
+depth of 64. This is a related result-transport boundary of the same repair,
+not an additional invented review cycle.
+
+Correction: `5d4c17a731a2926c1401252c0cce1cb43cc103b4`. Narrow guards close
+RecursionError only in owned input/identity/result conversion/serialization/
+copy transformations. Core comparison stays outside those guards; unrelated
+RuntimeError and unexpected core RecursionError still propagate. Result
+serialization uses configured depth plus the report envelope, keeping exact
+storage accounting, independent validation and original per-direction limits.
+
+The fresh ordinary LF-archive wheel matched all ten raw Git/package/site
+modules and passed 40 installed tests in 5.522 s. The unchanged 1,100-level
+probe then exited 0 with two UNKNOWN/BLOCK checks and zero core calls. The
+unchanged 80-level probe exited 0, preserving default-equivalent four results,
+the full wire, two core calls/two hits, result detachment and input bytes.
+The old 900-pair/99-instance pure membership oracle, encoded-pointer SDK/console
+probe, 35 actual sysconfig console cases across five encodings, both SDK examples
+and malformed-shape allocation of 1,176 B passed. One mistaken relative path to
+the old oracle caused a file-not-found harness error before product execution;
+its output was preserved, and the corrected path ran the unchanged oracle.
+
+The final freeze adds an explicit owned-result-conversion regression and this
+documentation. A new canonical normal install at that exact final SHA records
+the full suite and reproductions separately. Original three historical rounds,
+the three honest 0.2.0 rounds, old scores and failed probes are unchanged. This
+repair does not claim support for arbitrary depth, a process resource sandbox,
+or a new independent review score.

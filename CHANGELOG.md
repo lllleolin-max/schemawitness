@@ -15,6 +15,11 @@
 - Added offline SDK/benchmark workflows and budget/identity/resource/oracle
   tests. Distinct and small synthetic inputs can be slower and use more memory;
   no general production performance gain or independent review is claimed.
+- Closed stack exhaustion at batch-owned input, identity, result conversion and
+  detached-copy boundaries with complete UNKNOWN/BLOCK results. Result payload
+  serialization now honors configured depth; supported deep wire witnesses
+  retain their evidence and cache behavior. Unexpected core errors still
+  propagate.
 
 ## 0.1.1
 

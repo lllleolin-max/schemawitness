@@ -100,6 +100,17 @@ class BatchDepthTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 review(manifest(), batch_limits=BatchLimits())
 
+    def test_result_conversion_stack_limit_is_controlled_at_that_boundary(self):
+        class DeepResult:
+            def to_dict(self):
+                raise RecursionError('result conversion depth')
+        with patch.object(module, 'compare', return_value=DeepResult()):
+            result = review(manifest(), batch_limits=BatchLimits())
+        self.assertEqual(result['counts']['UNKNOWN'], 4)
+        self.assertEqual(result['batch']['halted'], 'batch_recursion_limit')
+        self.assertEqual(result['batch']['core_compare_calls'], 1)
+        self.assertEqual(result['batch']['cache_entries'], 0)
+
 
 if __name__ == '__main__':
     unittest.main()
