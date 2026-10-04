@@ -11,13 +11,13 @@ from .budget import BatchLimits, BatchInputLimit, BatchWorkLimit, WorkBudget
 
 def _shape_error(manifest, limits):
     # Complete structural validation precedes normalization and core work.
-    if not isinstance(manifest, dict) or set(manifest) != {"operations"} or not isinstance(manifest["operations"], list) or not manifest["operations"]:
+    if not isinstance(manifest, dict) or len(manifest) != 1 or set(manifest) != {"operations"} or not isinstance(manifest["operations"], list) or not manifest["operations"]:
         return {"code": "invalid_manifest", "message": "expected nonempty operations array"}
     if len(manifest["operations"]) > limits.max_nodes:
         return {"code": "manifest_limit", "message": "too many operations"}
     ids = set()
     for i, operation in enumerate(manifest["operations"]):
-        if not isinstance(operation, dict) or set(operation) != {"id", "request", "response"}:
+        if not isinstance(operation, dict) or len(operation) != 3 or set(operation) != {"id", "request", "response"}:
             return {"code": "invalid_manifest", "path": f"/operations/{i}", "message": "operation needs exactly id/request/response"}
         identity = operation["id"]
         if not isinstance(identity, str) or not identity or identity in ids:
@@ -25,7 +25,7 @@ def _shape_error(manifest, limits):
         ids.add(identity)
         for direction in ("request", "response"):
             pair = operation[direction]
-            if not isinstance(pair, dict) or set(pair) != {"old", "new"}:
+            if not isinstance(pair, dict) or len(pair) != 2 or set(pair) != {"old", "new"}:
                 return {"code": "invalid_manifest", "path": f"/operations/{i}/{direction}", "message": "pair needs exactly old/new schemas"}
     return None
 
