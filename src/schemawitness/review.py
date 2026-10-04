@@ -121,6 +121,27 @@ def _unknown(direction, code):
     return result.to_dict()
 
 
+def _tree_transform(function, budget, *args, **kwargs):
+    """Close expected stack exhaustion only at owned tree transformations.
+
+    Core comparison is deliberately outside this guard. RuntimeError and other
+    unexpected exceptions are not mistaken for an exhausted application bound.
+    """
+    try:
+        return function(*args, **kwargs)
+    except RecursionError:
+        budget.halt("batch_recursion_limit")
+
+
+def _result_wire(result, limits, budget):
+    try:
+        # A legal raised per-direction depth also applies to nested witnesses.
+        # The result envelope adds a few levels to the transported instance.
+        return _tree_transform(dumps, budget, result, max_depth=limits.max_depth * 2 + 8)
+    except WireLimitError:
+        budget.halt("batch_result_depth_limit")
+
+
 def review(manifest, *, limits=None, batch_limits=None):
     """Default: original per-direction bounds. BatchLimits opts into sharing.
 
@@ -144,6 +165,8 @@ def review(manifest, *, limits=None, batch_limits=None):
             stats["input_nodes"], stats["input_bytes"] = _input_size(manifest, limits, batch_limits)
         except (BatchInputLimit, WireLimitError):
             budget.halted = "batch_input_limit"
+        except RecursionError:
+            budget.halted = "batch_recursion_limit"
         except WireError as exc:
             invalid["diagnostics"] = [{"code": "invalid_json", "message": str(exc)}]
             return invalid
@@ -159,7 +182,8 @@ def review(manifest, *, limits=None, batch_limits=None):
             cache_hit = False
             try:
                 budget.charge("cache_lookup")
-                old_id, new_id = _schema_identity(pair["old"]), _schema_identity(pair["new"])
+                old_id = _tree_transform(_schema_identity, budget, pair["old"])
+                new_id = _tree_transform(_schema_identity, budget, pair["new"])
                 key = (direction, old_id, new_id)
                 if key in cache:
                     result = cache[key]
@@ -169,20 +193,21 @@ def review(manifest, *, limits=None, batch_limits=None):
                     if len(cache) >= batch_limits.max_cache_entries:
                         budget.halt("batch_cache_limit")
                     stats["core_compare_calls"] += 1
-                    result = compare(pair["old"], pair["new"], direction=direction, limits=limits, _budget=budget).to_dict()
+                    compared = compare(pair["old"], pair["new"], direction=direction, limits=limits, _budget=budget)
                     if budget.halted:
                         raise BatchWorkLimit(budget.halted)
+                    result = _tree_transform(compared.to_dict, budget)
                     budget.charge("cache_store")
-                    size = len(dumps(result)) + len(direction) + 128
+                    size = len(_result_wire(result, limits, budget)) + len(direction) + 128
                     if cache_bytes + size > batch_limits.max_cache_bytes:
                         budget.halt("batch_cache_limit")
-                    cache[key] = deepcopy(result)
+                    cache[key] = _tree_transform(deepcopy, budget, result)
                     cache_bytes += size
-                size = len(dumps(result))
+                size = len(_result_wire(result, limits, budget))
                 if result_bytes + size > batch_limits.max_result_bytes:
                     budget.halt("batch_result_limit")
+                result = _tree_transform(deepcopy, budget, result)
                 result_bytes += size
-                result = deepcopy(result)
             except BatchWorkLimit:
                 result = _unknown(direction, budget.halted)
             result["batch"] = {"operation_id": operation["id"], "direction": direction,
