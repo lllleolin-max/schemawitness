@@ -7,6 +7,7 @@ from .model import Compiler, Limits, SchemaIssue, prove_subset
 from .search import Search
 from .wire import dumps, loads, WireError, WireLimitError
 from .validation import independent_validate, check_reference_lookup
+from .budget import BatchWorkLimit
 
 
 def _meta_schema(value):
@@ -60,12 +61,21 @@ def _preflight(value, limits, path="", depth=0, count=None):
         raise SchemaIssue("resource_limit", path, "string exceeds document budget")
 
 
-def compare(old, new, *, direction="request", limits=None, prove=True, search=True):
+def compare(old, new, *, direction="request", limits=None, prove=True, search=True, _budget=None):
     """Compare JSON-compatible schemas. COMPATIBLE requires a sufficient proof.
 
     Request checks old <= new. Response checks new <= old. BREAKING always has
     independently validated evidence AFTER exact serialization and reparsing.
     """
+    try:
+        return _compare(old, new, direction=direction, limits=limits, prove=prove, search=search, _budget=_budget)
+    except BatchWorkLimit:
+        result = Result("UNKNOWN", direction, "old_subset_new" if direction == "request" else "new_subset_old")
+        result.diagnostics = [{"code": _budget.halted, "path": "", "message": "shared batch work exhausted; no certificate was retained"}]
+        return result
+
+
+def _compare(old, new, *, direction, limits, prove, search, _budget):
     if direction not in {"request", "response"}:
         raise ValueError("direction must be request or response")
     limits = limits or Limits()
@@ -78,11 +88,13 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
         for label, schema in (("old", old), ("new", new)):
             _preflight(schema, limits, "/" + label)
             try:
+                if _budget is not None:
+                    _budget.charge("backend_meta_schema")
                 Draft202012Validator.check_schema(_meta_schema(schema))
             except SchemaError as exc:
                 raise SchemaIssue("invalid_schema", "/" + label + "/" + "/".join(str(p) for p in exc.path),
                                   "invalid 2020-12 schema: " + exc.message) from exc
-        oc, nc = Compiler(old, limits), Compiler(new, limits)
+        oc, nc = Compiler(old, limits, _budget), Compiler(new, limits, _budget)
         compiled = []
         for label, compiler in (("old", oc), ("new", nc)):
             try:
@@ -93,7 +105,7 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
         os, ns = compiled
         result.metrics["normalized_nodes"] = oc.nodes + nc.nodes
         for label, schema, compiler in (("old", old, oc), ("new", new, nc)):
-            failure = check_reference_lookup(schema, compiler.references)
+            failure = check_reference_lookup(schema, compiler.references) if _budget is None else check_reference_lookup(schema, compiler.references, _budget)
             if failure:
                 result.diagnostics.append({**failure, "schema": label, "path": ""})
                 return result
@@ -111,18 +123,23 @@ def compare(old, new, *, direction="request", limits=None, prove=True, search=Tr
     source, target = (os, ns) if direction == "request" else (ns, os)
     source_schema, target_schema = (old, new) if direction == "request" else (new, old)
     trace = []
-    if prove and prove_subset(source, target, trace):
+    proved = prove and (prove_subset(source, target, trace) if _budget is None else prove_subset(source, target, trace, _budget=_budget))
+    if proved:
         result.status, result.proof = "COMPATIBLE", trace
         result.metrics["proof_steps"] = len(trace)
         return result
     result.metrics["proof_steps"] = len(trace)
     if search:
-        engine = Search(limits)
+        engine = Search(limits, _budget)
         for candidate in engine.candidates(source, target):
             try:
                 wire = dumps(candidate, max_bytes=limits.max_document_bytes, max_depth=limits.max_depth * 2)
                 transported = loads(wire, max_bytes=limits.max_document_bytes)
+                if _budget is not None:
+                    _budget.charge("backend_membership")
                 sv = independent_validate(source_schema, transported)
+                if _budget is not None:
+                    _budget.charge("backend_membership")
                 tv = independent_validate(target_schema, transported)
             except (ValueError, RecursionError) as exc:
                 if len(result.diagnostics) < 8:

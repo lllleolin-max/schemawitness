@@ -24,9 +24,10 @@ def decimal_fraction(q):
 
 
 class Search:
-    def __init__(self, limits):
+    def __init__(self, limits, _budget=None):
         self.limits, self.generated, self.truncated = limits, 0, False
         self.candidate_bytes, self.limit_reasons = 0, set()
+        self._budget = _budget
 
     def truncate(self, reason):
         self.truncated = True
@@ -35,6 +36,8 @@ class Search:
     def candidates(self, source, target, depth=0):
         seen = set()
         for value in self._values(source, target, depth):
+            if self._budget is not None:
+                self._budget.charge("candidate")
             size = bounded_wire_size(value, self.limits.max_document_bytes)
             if size > self.limits.max_document_bytes:
                 self.truncate("candidate_wire_bytes")
@@ -65,6 +68,8 @@ class Search:
         return values
 
     def _values(self, s, t, depth):
+        if self._budget is not None:
+            self._budget.charge("search")
         if depth > self.limits.max_depth:
             self.truncate("search_depth")
             return

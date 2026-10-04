@@ -180,11 +180,14 @@ class Compiler:
                  "exclusiveMinimum", "exclusiveMaximum", "minLength", "maxLength", "properties", "required",
                  "additionalProperties", "items", "minItems", "maxItems"} | annotations
 
-    def __init__(self, root, limits):
+    def __init__(self, root, limits, _budget=None):
         self.root, self.limits, self.nodes = root, limits, 0
         self.references = set()
+        self._budget = _budget
 
     def compile(self, schema=None, path="", stack=(), depth=0):
+        if self._budget is not None:
+            self._budget.charge("expansion")
         if schema is None:
             schema = self.root
         self.nodes += 1
@@ -286,8 +289,10 @@ class Compiler:
         return s
 
 
-def prove_subset(source, target, trace, path="", depth=0):
+def prove_subset(source, target, trace, path="", depth=0, _budget=None):
     """Sound sufficient rules only; False means 'not proved', never 'breaking'."""
+    if _budget is not None:
+        _budget.charge("proof")
     if source == target or target == Shape():
         trace.append({"path": path, "rule": "identical-normal-form" if source == target else "universal-target"})
         return True
@@ -331,16 +336,16 @@ def prove_subset(source, target, trace, path="", depth=0):
             if source.min_items < target.min_items or (target.max_items is not None and
                     (source_max is None or source_max > target.max_items)):
                 return False
-            if source_max != 0 and not prove_subset(source.item(), target.item(), trace, path + "/items", depth + 1):
+            if source_max != 0 and not prove_subset(source.item(), target.item(), trace, path + "/items", depth + 1, _budget):
                 return False
         if kind == "object":
             if not target.required <= source.required:
                 return False
             for key in sorted(source.props.keys() | target.props.keys()):
-                if not prove_subset(source.prop(key), target.prop(key), trace, path + "/properties/" + key.replace("~", "~0").replace("/", "~1"), depth + 1):
+                if not prove_subset(source.prop(key), target.prop(key), trace, path + "/properties/" + key.replace("~", "~0").replace("/", "~1"), depth + 1, _budget):
                     return False
             if not prove_subset(source.additional or Shape(), target.additional or Shape(), trace,
-                                path + "/additionalProperties", depth + 1):
+                                path + "/additionalProperties", depth + 1, _budget):
                 return False
     trace.append({"path": path, "rule": "product-inclusion", "types": sorted(source.types)})
     return True

@@ -83,7 +83,7 @@ def _failure(exc):
             "message": "independent dependency could not evaluate the schema: " + type(exc).__name__}
 
 
-def check_reference_lookup(schema, references):
+def check_reference_lookup(schema, references, _budget=None):
     """Exercise independent target lookup before any inclusion certificate.
 
     Compiler metadata supplies only encountered URI spellings; target lookup
@@ -92,8 +92,12 @@ def check_reference_lookup(schema, references):
     proof-only paths instead of discovering them only during witness search.
     """
     try:
+        if _budget is not None:
+            _budget.charge("backend_reference_root")
         _, resolver = _resolver(schema)
         for ref in sorted(references):
+            if _budget is not None:
+                _budget.charge("backend_reference_lookup")
             resolver.lookup(ref)
     except (Unresolvable, RecursionError, UnicodeError, TypeError, AttributeError) as exc:
         return _failure(exc)

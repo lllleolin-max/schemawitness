@@ -1,7 +1,7 @@
 import argparse
 import sys
 from pathlib import Path
-from . import Limits, compare, dumps, loads, review
+from . import Limits, BatchLimits, compare, dumps, loads, review
 from .wire import WireError, WireLimitError
 
 
@@ -40,12 +40,14 @@ def main(argv=None):
 def review_main(argv):
     parser = argparse.ArgumentParser(description="Fail-closed API release review")
     parser.add_argument("manifest", type=Path)
+    parser.add_argument("--batch-max-work", type=int, help="opt in to shared batch application work and pair cache")
     args = parser.parse_args(argv)
     try:
         limits = Limits()
         with args.manifest.open("rb") as stream:
             data = stream.read(limits.max_document_bytes + 1)
-        result = review(loads(data.decode("utf-8"), max_bytes=limits.max_document_bytes), limits=limits)
+        batch_limits = BatchLimits(max_work=args.batch_max_work) if args.batch_max_work is not None else None
+        result = review(loads(data.decode("utf-8"), max_bytes=limits.max_document_bytes), limits=limits, batch_limits=batch_limits)
         print(dumps(result))
         return {"COMPATIBLE": 0, "BREAKING": 1, "UNKNOWN": 2, "INVALID": 3}[result["status"]]
     except WireLimitError as exc:
